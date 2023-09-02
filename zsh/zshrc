@@ -1,0 +1,164 @@
+typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
+
+# ============= Zinit + conda + p10k =============
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# ------------- zinit core -------------
+if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
+    print -P "%F{33} %F{220}Installing %F{33}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager (%F{33}zdharma-continuum/zinit%F{220})…%f"
+    command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"
+    command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" && \
+        print -P "%F{33} %F{34}Installation successful.%f%b" || \
+        print -P "%F{160} The clone has failed.%f%b"
+fi
+source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
+# ------------- zinit core -------------
+
+# ------------- omz modules -------------
+zinit snippet OMZ::plugins/sudo/sudo.plugin.zsh # double esc to add/remove sudo
+zinit snippet OMZ::lib/completion.zsh #tab 輔選時列出清單用光棒選，而非看不到列表只輪流出現一個當前選項
+zinit snippet OMZ::lib/key-bindings.zsh #已打的部份指令不會在瀏覽歷史(上下鍵)時被清除
+# 未知/未使用
+# zinit snippet OMZ::lib/history.zsh
+# zinit snippet OMZ::lib/theme-and-appearance.zsh
+# zinit snippet OMZ::plugins/colored-man-pages/colored-man-pages.plugin.zsh
+# zinit snippet OMZ::plugins/extract
+# ------------- omz modules -------------
+
+# ------------- comda -------------
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/Users/zeph/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/Users/zeph/miniconda3/etc/profile.d/conda.sh" ]; then
+# . "/Users/zeph/miniconda3/etc/profile.d/conda.sh"  # commented out by conda initialize
+    else
+# export PATH="/Users/zeph/miniconda3/bin:$PATH"  # commented out by conda initialize
+    fi
+fi
+unset __conda_setup
+# ------------- comda -------------
+
+# ------------- Powerlevel10k -------------
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+zinit ice depth=1; zinit light romkatv/powerlevel10k
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+# ------------- Powerlevel10k -------------
+
+# ------------- zinit modules -------------
+# Load a few important annexes, without Turbo
+# (this is currently required for annexes)
+zinit light-mode for \
+    zdharma-continuum/zinit-annex-as-monitor \
+    zdharma-continuum/zinit-annex-bin-gem-node \
+    zdharma-continuum/zinit-annex-patch-dl \
+    zdharma-continuum/zinit-annex-rust
+
+# 語法高亮 補全 自動建議
+zinit wait lucid for \
+ atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
+    zdharma-continuum/fast-syntax-highlighting \
+ blockf \
+    zsh-users/zsh-completions \
+ atload"!_zsh_autosuggest_start" \
+    zsh-users/zsh-autosuggestions
+# ------------- zinit modules -------------
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=500000
+SAVEHIST=500000
+setopt BANG_HIST                 # Treat the '!' character specially during expansion.
+setopt EXTENDED_HISTORY          # Write the history file in the ":start:elapsed;command" format.
+setopt INC_APPEND_HISTORY        # Write to the history file immediately, not when the shell exits.
+setopt SHARE_HISTORY             # Share history between all sessions.
+setopt HIST_EXPIRE_DUPS_FIRST    # Expire duplicate entries first when trimming history.
+setopt HIST_IGNORE_DUPS          # Don't record an entry that was just recorded again.
+setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
+setopt HIST_FIND_NO_DUPS         # Do not display a line previously found.
+setopt HIST_IGNORE_SPACE         # Don't record an entry starting with a space.
+setopt HIST_SAVE_NO_DUPS         # Don't write duplicate entries in the history file.
+setopt HIST_REDUCE_BLANKS        # Remove superfluous blanks before recording entry.
+setopt HIST_VERIFY               # Don't execute immediately upon history expansion.
+setopt HIST_BEEP                 # Beep when accessing nonexistent history.
+# ============= Zinit + conda + p10k =============
+
+
+
+# ================= Alias =================
+alias ls='exa'                                                          # ls
+alias l='exa -lbF --git'                                                # list, size, type, git
+alias ll='exa -lbGF --git'                                              # long list
+alias llm='exa -lbGd --git --sort=modified'                             # long list, modified date sort
+alias la='exa -lhHbmua --time-style=long-iso --color-scale'
+alias laa='exa -lbhHigUmuSa --time-style=long-iso --git --color-scale'  # all list
+alias lx='exa -lbhHigUmuSa@ --time-style=long-iso --git --color-scale'  # all + extended list
+alias lS='exa -1'                                                       # one column, just names
+alias lt='exa --tree --level=2'
+alias lt3='exa --tree --level=3'
+alias lt4='exa --tree --level=4'
+alias lt5='exa --tree --level=5'
+alias lt6='exa --tree --level=6'
+alias lt7='exa --tree --level=7'
+alias lt8='exa --tree --level=8'
+alias lt9='exa --tree --level=9'
+alias lt0='exa --tree --level=10'
+# ================= Alias =================
+
+
+
+# ================= Paths =================
+PATH=$PATH:$HOME/sh
+PATH=$PATH:$HOME/scripts
+PATH=$PATH:$HOME/bin
+PATH=$PATH:$HOME/.local/bin
+PATH=$PATH:$HOME/go/bin
+PATH=$PATH:$HOME/flutter/bin
+PATH=$PATH:$HOME/miniconda3/bin
+PATH=$PATH:/opt/idea-IU-231.8770.65/bin
+PATH=$PATH:home/linuxbrew/.linuxbrew/bin
+#PATH=$PATH:$(go env GOPATH)/bin
+# ================= Paths =================
+
+alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive"
+alias dfimage="docker run -v /var/run/docker.sock:/var/run/docker.sock --rm alpine/dfimage"
+
+alias qdbus=”qdbus-qt5”
+LC_CTYPE=en_US.UTF-8
+LC_ALL=en_US.UTF-8
+export GO_PATH=~/go
+export PATH=$PATH:/$GO_PATH/bin`
+export PATH=$PATH:/usr/local/go/bin
+export PATH="$PATH:$HOME/.docker/cli-plugins/"
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/opt/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/opt/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/opt/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
+        source /etc/profile.d/vte.csh
+fi
+
