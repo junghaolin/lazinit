@@ -162,3 +162,6 @@ if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
         source /etc/profile.d/vte.csh
 fi
 
+if [ "$TERM" = "xterm-kitty" ]; then
+        alias ssh="kitty +kitten ssh"
+fi
