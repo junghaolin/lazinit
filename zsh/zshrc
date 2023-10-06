@@ -1,4 +1,15 @@
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
+which neofetch 1>/dev/null 
+if [ "$?" = "0" ];then neofetch;fi
+
+find_dir (){
+  for var in "$@" ; do
+    if [ -e "$var" ];then
+      echo $var
+      exit
+    fi
+  done
+}
 
 # ============= Zinit + conda + p10k =============
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
@@ -32,20 +43,21 @@ zinit snippet OMZ::lib/key-bindings.zsh #已打的部份指令不會在瀏覽歷
 # zinit snippet OMZ::plugins/extract
 # ------------- omz modules -------------
 
-# ------------- comda -------------
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/Users/zeph/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+
+# ------------- conda -------------
+CONDA_PATH=$(find_dir "$HOME/miniconda3" "$HOME/.local/opt/miniconda3" "$HOME/.miniconda3" "/opt/miniconda3")
+__conda_setup="$($CONDA_PATH/bin/conda 'shell.zsh' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
     eval "$__conda_setup"
 else
-    if [ -f "/Users/zeph/miniconda3/etc/profile.d/conda.sh" ]; then
+    if [ -f "$CONDA_PATH/etc/profile.d/conda.sh" ]; then
 # . "/Users/zeph/miniconda3/etc/profile.d/conda.sh"  # commented out by conda initialize
     else
 # export PATH="/Users/zeph/miniconda3/bin:$PATH"  # commented out by conda initialize
     fi
 fi
 unset __conda_setup
-# ------------- comda -------------
+# ------------- conda -------------
 
 # ------------- Powerlevel10k -------------
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
@@ -118,11 +130,13 @@ PATH=$PATH:$HOME/sh
 PATH=$PATH:$HOME/scripts
 PATH=$PATH:$HOME/bin
 PATH=$PATH:$HOME/.local/bin
-PATH=$PATH:$HOME/go/bin
+GO_PATH=$(find_dir "$HOME/go" "$HOME/.local/opt/go" "$HOME/.go" "/opt/go")
+if [ -e "$CONDA_PATH" ];then PATH=$PATH:$GO_PATH/bin ; fi
+#PATH=$PATH:$HOME/go/bin
 PATH=$PATH:$HOME/flutter/bin
-PATH=$PATH:$HOME/miniconda3/bin
+#PATH=$PATH:$HOME/miniconda3/bin
 PATH=$PATH:/opt/idea-IU-231.8770.65/bin
-PATH=$PATH:home/linuxbrew/.linuxbrew/bin
+#PATH=$PATH:home/linuxbrew/.linuxbrew/bin
 #PATH=$PATH:$(go env GOPATH)/bin
 # ================= Paths =================
 
@@ -133,7 +147,7 @@ alias qdbus=”qdbus-qt5”
 LC_CTYPE=en_US.UTF-8
 LC_ALL=en_US.UTF-8
 export GO_PATH=~/go
-export PATH=$PATH:/$GO_PATH/bin`
+export PATH=$PATH:/$GO_PATH/bin
 export PATH=$PATH:/usr/local/go/bin
 export PATH="$PATH:$HOME/.docker/cli-plugins/"
 
@@ -152,16 +166,18 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+export FZF_DEFAULT_COMMAND='fd –type f –follow –exclude .git'
 
 
-export NVM_DIR="$HOME/.nvm"
+export NVM_DIR=$(find_dir "/usr/local/opt/nvm" "$HOME/.nvm")
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
-        source /etc/profile.d/vte.csh
+    source /etc/profile.d/vte.csh
 fi
 
 if [ "$TERM" = "xterm-kitty" ]; then
-        alias ssh="kitty +kitten ssh"
+    alias ssh="kitty +kitten ssh"
 fi
+
