@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=Netflix
+GenericName=Netflix
+Comment=Watch Netflix
+Exec=/usr/bin/google-chrome-stable https://www.netflix.com
+Terminal=false
+Icon=/home/zeph/lazinit/icons/netflix.png
+Type=Application

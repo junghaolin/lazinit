@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=LeetCode
+GenericName=LeetCode
+Comment=Do LeetCode
+Exec=/usr/bin/google-chrome-stable https://leetcode.com/problemset/
+Terminal=false
+Icon=/home/zeph/lazinit/icons/leetcode.png
+Type=Application
