@@ -121,6 +121,31 @@ alias lt7='exa --tree --level=7'
 alias lt8='exa --tree --level=8'
 alias lt9='exa --tree --level=9'
 alias lt0='exa --tree --level=10'
+
+alias vi='nvim'
+alias nv='nvim'
+
+
+alias grc='grc -es --colour=auto'
+alias netstat='sudo grc netstat'
+alias lsof='sudo grc netstat'
+alias ping='grc ping'
+alias traceroute='grc traceroute'
+alias ifconfig='grc ifconfig'
+alias mount='grc mount'
+alias ps='grc ps'
+alias df='grc df'
+alias du='grc du'
+alias dig='grc dig'
+alias diff='grc diff'
+alias wdiff='grc wdiff'
+alias route='grc route'
+alias mtr='grc mtr'
+alias git='grc git'
+alias docker='grc docker'
+
+alias grep='rg --color=always --no-ignore-vcs --mmap --colors "match:fg:red"'
+alias cat='ccat --color=always --bg=dark -G Plaintext="white"'
 # ================= Alias =================
 
 
@@ -136,6 +161,7 @@ if [ -e "$CONDA_PATH" ];then PATH=$PATH:$GO_PATH/bin ; fi
 PATH=$PATH:$HOME/flutter/bin
 #PATH=$PATH:$HOME/miniconda3/bin
 PATH=$PATH:/opt/idea-IU-231.8770.65/bin
+PATH=$PATH:/opt/lua-language-server
 #PATH=$PATH:home/linuxbrew/.linuxbrew/bin
 #PATH=$PATH:$(go env GOPATH)/bin
 # ================= Paths =================
@@ -174,7 +200,7 @@ export NVM_DIR=$(find_dir "/usr/local/opt/nvm" "$HOME/.nvm")
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
-    source /etc/profile.d/vte.csh
+    source /etc/profile.d/vte-2.91.sh
 fi
 
 if [ "$TERM" = "xterm-kitty" ]; then
