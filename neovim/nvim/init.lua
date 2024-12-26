@@ -29,6 +29,23 @@ vim.o.foldlevel = 1
 -- 2. 插件管理 (Plugin Management)
 -- =====================================================
 
+-- 自動安裝
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable",
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
+
+
+
+
 -- 設置 lazy.nvim 路徑
 -- Set lazy.nvim path
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -65,6 +82,37 @@ require("lazy").setup({
 	},
 })
 
+--[[
+local cmp = require("cmp")
+
+cmp.setup({
+	snippet = {
+		expand = function(args)
+			require("luasnip").lsp_expand(args.body)
+		end,
+	},
+	mapping = cmp.mapping.preset.insert({
+		["<C-b>"] = cmp.mapping.scroll_docs(-4),
+		["<C-f>"] = cmp.mapping.scroll_docs(4),
+		["<C-Space>"] = cmp.mapping.complete(),
+		["<C-e>"] = cmp.mapping.abort(),
+		["<CR>"] = cmp.mapping.confirm({ select = true }),
+	}),
+	sources = cmp.config.sources({
+		{ name = "nvim_lua" },
+		{ name = "buffer" },
+		{ name = "path" },
+		{ name = "copilot" },
+	}),
+})
+require("cmp").setup({
+	sources = cmp.config.sources({
+		{ name = "nvim_lua" },
+		{ name = "buffer" },
+		{ name = "path" },
+	}),
+})
+]]
 -- =====================================================
 -- 3. 快捷鍵映射 (Key Mappings)
 -- =====================================================
