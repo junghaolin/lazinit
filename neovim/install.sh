@@ -34,6 +34,9 @@ cd 3rd/luamake
 cd ../..
 ./3rd/luamake/luamake rebuild
 sudo mv build/bin/lua-language-server /usr/local/bin/
+sudo mv build/bin/bootstrap /usr/local/bin/
+sudo mv build/bin/main.lua /usr/local/bin/
+
 sudo mkdir -p /opt
 sudo mv build/bin/main.lua /opt/
 
