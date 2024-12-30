@@ -1,6 +1,8 @@
 return {
 	{
 		"hrsh7th/nvim-cmp",
+		enabled = true,
+		event = "InsertEnter",
 		dependencies = {
 			"hrsh7th/cmp-nvim-lsp",
 			"hrsh7th/cmp-nvim-lua",
@@ -13,6 +15,7 @@ return {
 		config = function()
 			local cmp = require("cmp")
 			cmp.setup({
+				enabled = true,
 				snippet = {
 					expand = function(args)
 						require("luasnip").lsp_expand(args.body)
@@ -48,47 +51,6 @@ return {
 	},
 	{
 		"zbirenbaum/copilot-cmp",
-		dependencies = { "zbirenbaum/copilot.lua" },
-		config = function()
-			require("copilot_cmp").setup()
-		end,
-	},
-}
-
---[[
-return {
-	{
-		"hrsh7th/nvim-cmp",
-		dependencies = {
-			"hrsh7th/cmp-nvim-lua",
-			"hrsh7th/cmp-buffer",
-			"hrsh7th/cmp-path",
-			"hrsh7th/cmp-cmdline",
-			"L3MON4D3/LuaSnip",
-			"saadparwaiz1/cmp_luasnip",
-		},
-	},
-	{ "hrsh7th/cmp-nvim-lsp" },
-	{ "hrsh7th/cmp-buffer" },
-	{ "hrsh7th/cmp-path" },
-	{
-		"hrsh7th/cmp-nvim-lua",
-		depedencies = "hrsh7th/nvim-cmp",
-	},
-	{ "saadparwaiz1/cmp_luasnip" },
-	{ "L3MON4D3/LuaSnip" },
-	{
-		"zbirenbaum/copilot.lua",
-		cmd = "Copilot",
-		event = "InsertEnter",
-		config = function()
-			require("copilot").setup({
-				-- Copilot 配置
-			})
-		end,
-	},
-	{
-		"zbirenbaum/copilot-cmp",
 		dependencies = {
 			"zbirenbaum/copilot.lua",
 			"hrsh7th/nvim-cmp",
@@ -97,14 +59,4 @@ return {
 			require("copilot_cmp").setup()
 		end,
 	},
-	{
-		"hrsh7th/nvim-cmp",
-		config = function()
-			local cmp = require("cmp")
-			cmp.setup({
-				-- nvim-cmp 配置
-			})
-		end,
-	},
 }
-]]
