@@ -61,3 +61,9 @@ npm install -g vscode-langservers-extracted
 
 #Dockerfile
 npm install -g dockerfile-language-server-nodejs
+
+sudo apt-get install luajit
+sudo apt-get install libmagickwand-dev
+sudo apt-get install libgraphicsmagick1-dev
+sudo apt-get install luarocks
+sudo luarocks install magick
