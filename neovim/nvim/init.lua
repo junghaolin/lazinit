@@ -32,19 +32,16 @@ vim.o.foldlevel = 1
 -- 自動安裝
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable",
-    lazypath,
-  })
+	vim.fn.system({
+		"git",
+		"clone",
+		"--filter=blob:none",
+		"https://github.com/folke/lazy.nvim.git",
+		"--branch=stable",
+		lazypath,
+	})
 end
 vim.opt.rtp:prepend(lazypath)
-
-
-
 
 -- 設置 lazy.nvim 路徑
 -- Set lazy.nvim path
@@ -179,3 +176,16 @@ vim.api.nvim_create_autocmd("VimEnter", {
 		end
 	end,
 })
+--[[
+vim.api.nvim_create_autocmd("BufReadPre", {
+	pattern = "*",
+	callback = function()
+		if vim.fn.getfsize(vim.fn.expand("%")) > 1024 * 1024 then
+			vim.o.binary = true
+			--vim.o.editable = false
+			vim.cmd("%!xxd")
+			vim.bo.filetype = "xxd"
+		end
+	end,
+})
+]]
