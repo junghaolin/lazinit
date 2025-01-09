@@ -122,6 +122,7 @@ alias lt8='exa --tree --level=8'
 alias lt9='exa --tree --level=9'
 alias lt0='exa --tree --level=10'
 
+alias fzf='fzf --ansi'
 alias vi='nvim'
 alias nv='nvim'
 
