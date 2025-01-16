@@ -1,3 +1,5 @@
+export TERM=xterm-256color
+
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 which neofetch 1>/dev/null 
 if [ "$?" = "0" ];then neofetch;fi
