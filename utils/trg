@@ -1,0 +1,2 @@
+#!/bin/bash
+tail -f -n 10000 $1 | rg $2
