@@ -4,6 +4,7 @@
 #bs2     joseph@172.16.245.130:/home/joseph/.repo/ligand.git (push)
 #oalan   git@T1JNR3GLB01.wneweb.com.tw:jnr360/ligand.git (fetch)
 #oalan   git@T1JNR3GLB01.wneweb.com.tw:jnr360/ligand.git (push)
+#oalanunstable   git@T1JNR3GLB01.wneweb.com.tw:20001117/ligand.git (push)
 #origin  https://gitlab.zoba.cc/junghaolin/ligand.git (fetch)
 #origin  https://gitlab.zoba.cc/junghaolin/ligand.git (push)
 
@@ -11,10 +12,12 @@ if [ ! "$(basename $(pwd))" = "ligand" ]; then
   echo Not in a folder named ligand, exit.
   exit
 fi
-git push -u origin master
+git push -u origin main
 git push -u oalan 2wlag:main
-git push -u bs2 master:main
-git branch -f 2wlag $(git rev-list -n 1 --before="2 weeks ago" master)
+git push -u bs2 main:main
+git push -u oalanunstable master:main
+git branch -f 2wlag $(git rev-list -n 1 --before="2 weeks ago" main)
 git push oalan 2wlag:main
-git push origin master:master
-git push bs2 master:main
+git push origin main
+git push bs2 main
+git push oalanunstable main
