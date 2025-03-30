@@ -1,6 +1,6 @@
 #!/bin/bash
-
-cat init_apt_pks | while read pkg; do
+rm -rf actual_apt_pks
+cat init_apt_pks | tr ' ' '\n' | while read pkg; do
   if apt-cache show "$pkg" >/dev/null 2>&1; then
     if apt-cache policy "$pkg" | grep -q 'Candidate: (none)'; then
       continue
