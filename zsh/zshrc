@@ -103,60 +103,46 @@ setopt HIST_VERIFY               # Don't execute immediately upon history expans
 setopt HIST_BEEP                 # Beep when accessing nonexistent history.
 # ============= Zinit + conda + p10k =============
 
+# lazy-load exa/ls aliases only for interactive shells
+if [[ -o interactive ]]; then
+  source ~/.zsh/lazy_ls.zsh
+  source ~/.zsh/lazy_vi.zsh
+  source ~/.zsh/lazy_grc.zsh
+  source ~/.zsh/lazy_grep.zsh
+  source ~/.zsh/lazy_cat.zsh
+fi
 
 
-# ================= Alias =================
-alias ls='exa'                                                          # ls
-alias l='exa -lbF --git'                                                # list, size, type, git
-alias ll='exa -lbGF --git'                                              # long list
-alias llm='exa -lbGd --git --sort=modified'                             # long list, modified date sort
-alias la='exa -lhHbmua --time-style=long-iso --color-scale'
-alias laa='exa -lbhHigUmuSa --time-style=long-iso --git --color-scale'  # all list
-alias lx='exa -lbhHigUmuSa@ --time-style=long-iso --git --color-scale'  # all + extended list
-alias lS='exa -1'                                                       # one column, just names
-alias lt='exa --tree --level=2'
-alias lt3='exa --tree --level=3'
-alias lt4='exa --tree --level=4'
-alias lt5='exa --tree --level=5'
-alias lt6='exa --tree --level=6'
-alias lt7='exa --tree --level=7'
-alias lt8='exa --tree --level=8'
-alias lt9='exa --tree --level=9'
-alias lt0='exa --tree --level=10'
-
-alias fzf='fzf --ansi'
-alias vi='nvim'
-alias nv='nvim'
+#alias vi='nvim'
+#alias nv='nvim'
 
 
-alias grc='grc -es --colour=auto'
-alias netstat='sudo grc netstat'
-alias lsof='sudo grc netstat'
-alias ping='grc ping'
-alias traceroute='grc traceroute'
-alias ifconfig='grc ifconfig'
-alias mount='grc mount'
-alias ps='grc ps'
-alias df='grc df'
-alias du='grc du'
-alias dig='grc dig'
-alias diff='grc diff'
-alias wdiff='grc wdiff'
-alias route='grc route'
-alias mtr='grc mtr'
-alias git='grc git'
-alias docker='grc docker'
+#alias grc='grc -es --colour=auto'
+##alias netstat='sudo grc netstat'
+#alias lsof='sudo grc netstat'
+#alias ping='grc ping'
+#alias traceroute='grc traceroute'
+#alias ifconfig='grc ifconfig'
+#alias mount='grc mount'
+#alias ps='grc ps'
+#alias df='grc df'
+#alias du='grc du'
+#alias dig='grc dig'
+#alias diff='grc diff'
+#alias wdiff='grc wdiff'
+#alias route='grc route'
+#3333alias mtr='grc mtr'
+#alias git='grc git'
+#alias docker='grc docker'
 
-alias grep='rg --color=always --no-ignore-vcs --mmap --colors "match:fg:red"'
-alias cat='ccat --color=always --bg=dark -G Plaintext="white"'
+#alias grep='rg --color=always --no-ignore-vcs --mmap --colors "match:fg:red"'
+#alias cat='ccat --color=always --bg=dark -G Plaintext="white"'
 # ================= Alias =================
 
 
 
 # ================= Paths =================
-PATH=$PATH:$HOME/sh
-PATH=$PATH:$HOME/scripts
-PATH=$PATH:$HOME/bin
+PATH=$PATH:$HOME/lazinit/utils
 PATH=$PATH:$HOME/.local/bin
 GO_PATH=$(find_dir "$HOME/go" "$HOME/.local/opt/go" "$HOME/.go" "/opt/go")
 if [ -e "$CONDA_PATH" ];then PATH=$PATH:$GO_PATH/bin ; fi
@@ -210,3 +196,15 @@ if [ "$TERM" = "xterm-kitty" ]; then
     alias ssh="kitty +kitten ssh"
 fi
 
+
+alias luamake="/home/zeph/lazinit/neovim/lua-language-server/3rd/luamake/luamake"
+alias fzf='fzf --ansi'
+
+# 綁定 Ctrl+j 到上一個歷史指令
+bindkey '^K' history-search-backward
+bindkey '^J' history-search-forward
+
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/home/zeph/.lmstudio/bin"
+export HSA_OVERRIDE_GFX_VERSION=11.0.0
