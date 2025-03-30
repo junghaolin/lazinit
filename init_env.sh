@@ -27,6 +27,8 @@ mv .zsh .zsh.bk
 ZP=$(realpath --relative-to="$HOME" "$ZSHP")
 ln -s $ZP/zshrc .zshrc
 ln -s $ZP/zsh .zsh
+
 if [ ! "$SHELL" = "/usr/bin/zsh" ]; then
   chsh -s /usr/bin/zsh
+  zsh
 fi

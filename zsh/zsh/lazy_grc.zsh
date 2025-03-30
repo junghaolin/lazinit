@@ -1,9 +1,7 @@
 # ~/.zsh/lazy_grc.zsh
 source ~/.zsh/utils/check_alias.zsh
 
-_lazy_grc_alias_init() {
-  check_alias grc grc grc
-  if [ $? -eq 0 ]; then
+do_alias(){
     alias grc='grc -es --colour=auto'
     alias netstat='sudo grc netstat'
     alias lsof='sudo grc netstat'
@@ -21,6 +19,18 @@ _lazy_grc_alias_init() {
     alias mtr='grc mtr'
     alias git='grc git'
     alias docker='grc docker'
+}
+
+if command -v grc >/dev/null 2>&1; then
+  do_alias
+  return
+fi
+
+
+_lazy_grc_alias_init() {
+  check_alias grc grc grc
+  if [ $? -eq 0 ]; then
+    do_alias
   else
     echo "[lazy_grc] 'grc' not installed or cannot be installed. Falling back to system commands."
   fi
@@ -31,7 +41,6 @@ _lazy_grc_alias_init() {
 }
 
 # 需要覆蓋的所有命令都定義函數
-grc()         { _lazy_grc_alias_init grc "$@"; }
 netstat()     { _lazy_grc_alias_init netstat "$@"; }
 lsof()        { _lazy_grc_alias_init lsof "$@"; }
 ping()        { _lazy_grc_alias_init ping "$@"; }

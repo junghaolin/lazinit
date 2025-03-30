@@ -1,9 +1,6 @@
 # ~/.zsh/lazy_vi.zsh
 source ~/.zsh/utils/check_alias.zsh
 
-
-
-
 do_alias(){
     alias vi='nvim'
     alias nv='nvim'

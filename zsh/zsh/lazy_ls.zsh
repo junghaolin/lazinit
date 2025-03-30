@@ -31,7 +31,6 @@ fi
 _lazy_ls_alias_init() {
   check_alias exa eza exa
   if [ $? -eq 0 ]; then
-    # exa-based aliases
     do_alias
   else
     # fallback to ls

@@ -1,8 +1,6 @@
 # ~/.zsh/lazy_cat.zsh
-# Lazy load 'cat' => alias to 'bat'
-# Require: check_alias() in ~/.zsh/utils/check_alias.zsh
-
 source ~/.zsh/utils/check_alias.zsh
+
 do_alias(){
   alias cat='batcat --color=always --paging=never'
 }
@@ -14,7 +12,7 @@ fi
 
 _lazy_cat_alias_init() {
   # 如果系統已經有 bat，就直接 alias
-  if command -v bat >/dev/null 2>&1; then
+  if command -v batcat >/dev/null 2>&1; then
     do_alias
   else
     # 系統沒有 bat => 嘗試自動安裝
