@@ -214,8 +214,17 @@ if [ -d .zsh ] && [ ! -L .zsh ]; then
     mv .zsh "$BACKUP"
 fi
 
-# 創建符號連結
-ZP=$(realpath --relative-to="$HOME" "$ZSHP" 2>/dev/null || python3 -c "import os.path; print(os.path.relpath('$ZSHP', '$HOME'))")
+# 修改前 (原本的樣子):
+# ZP=$(realpath --relative-to="$HOME" "$ZSHP" 2>/dev/null || python3 -c "import os.path; print(os.path.relpath('$ZSHP', '$HOME'))")
+
+# 修改後 (加入防呆):
+if [ -n "$ZSHP" ]; then
+    ZP=$(realpath --relative-to="$HOME" "$ZSHP" 2>/dev/null || python3 -c "import os.path; print(os.path.relpath('$ZSHP', '$HOME'))")
+else
+    echo "Warning: ZSHP variable is empty, skipping path calculation."
+    ZP=""
+fi
+
 info "創建符號連結..."
 ln -sf "$ZP/zshrc" .zshrc
 ln -sf "$ZP/zsh" .zsh

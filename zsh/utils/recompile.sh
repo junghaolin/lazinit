@@ -6,7 +6,7 @@ echo "🔄 重新編譯 ZSH 配置..."
 
 # 編譯主配置
 echo "  編譯 ~/.zshrc..."
-zcompile ~/.zshrc
+zsh -c "zcompile ~/.zshrc" 2>/dev/null
 
 # 編譯所有 lazy loading 腳本
 echo "  編譯 lazy loading 腳本..."
@@ -14,7 +14,7 @@ cd ~/.zsh
 
 for file in lazy_*_v2.zsh utils/check_alias.zsh; do
   if [ -f "$file" ]; then
-    zcompile "$file"
+    zsh -c "zcompile $file" 2>/dev/null
     echo "    ✓ $file"
   fi
 done

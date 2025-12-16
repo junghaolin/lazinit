@@ -14,7 +14,29 @@ return {
 		},
 		config = function()
 			local cmp = require("cmp")
-			cmp.setup({
+			local has_copilot = vim.fn.executable("node") == 1
+			
+			-- 动态构建补全源
+			local sources = {}
+			
+			-- 如果有 Node.js，添加 Copilot
+			if has_copilot then
+				table.insert(sources, {
+					name = "copilot",
+					group_index = 1,
+					priority = 100,
+					max_item_count = 3,
+				})
+			end
+			
+			-- 添加其他补全源
+			vim.list_extend(sources, {
+				{ 
+					name = "nvim_lsp",
+					group_index = 1,
+					priority = 90,
+					max_item_count = 20,
+				},
 				enabled = true,
 				snippet = {
 					expand = function(args)
@@ -61,32 +83,55 @@ return {
 					end
 				end, { "i", "s" }),
 			}),
-			-- 补全源配置（按优先级排序）
-			sources = cmp.config.sources({
-				-- 第一组：高优先级源
-				{ 
-					name = "copilot",
-					group_index = 1,
-					priority = 100,  -- 最高优先级
-					max_item_count = 3,  -- 限制 Copilot 建议数量
+			
+			cmp.setup({
+				enabled = true,
+				snippet = {
+					expand = function(args)
+						require("luasnip").lsp_expand(args.body)
+					end,
 				},
-				{ 
-					name = "nvim_lsp",
-					group_index = 1,
-					priority = 90,
-					max_item_count = 20,
-				},
-				{ 
-					name = "nvim_lua",
-					group_index = 1,
-					priority = 80,
-				},
-				{ 
-					name = "luasnip",
-					group_index = 1,
-					priority = 70,
-					max_item_count = 5,
-				},
+				mapping = cmp.mapping.preset.insert({
+					["<C-b>"] = cmp.mapping.scroll_docs(-4),
+					["<C-f>"] = cmp.mapping.scroll_docs(4),
+					["<C-Space>"] = cmp.mapping.complete(),
+					["<C-e>"] = cmp.mapping.abort(),
+					["<CR>"] = cmp.mapping.confirm({ select = true }),
+					["<Down>"] = cmp.mapping(function(fallback)
+						if cmp.visible() then
+							cmp.select_next_item()
+						else
+							fallback()
+						end
+					end, { "i", "s" }),
+					["<Up>"] = cmp.mapping(function(fallback)
+						if cmp.visible() then
+							cmp.select_prev_item()
+						else
+							fallback()
+						end
+					end, { "i", "s" }),
+					["<Tab>"] = cmp.mapping(function(fallback)
+						if cmp.visible() then
+							cmp.select_next_item()
+						elseif require("luasnip").expand_or_jumpable() then
+							require("luasnip").expand_or_jump()
+						else
+							fallback()
+						end
+					end, { "i", "s" }),
+					["<S-Tab>"] = cmp.mapping(function(fallback)
+						if cmp.visible() then
+							cmp.select_prev_item()
+						elseif require("luasnip").jumpable(-1) then
+							require("luasnip").jump(-1)
+						else
+							fallback()
+						end
+					end, { "i", "s" }),
+				}),
+				-- 补全源配置（按优先级排序）
+				sources = cmp.config.sources(sources, {
 			}, {
 				-- 第二组：低优先级源（第一组没结果才显示）
 				{ 
@@ -124,8 +169,18 @@ return {
 			-- 排序和过滤
 			sorting = {
 				priority_weight = 2,
-				comparators = {
+				comparators = has_copilot and {
 					require("copilot_cmp.comparators").prioritize,  -- Copilot 优先
+					cmp.config.compare.offset,
+					cmp.config.compare.exact,
+					cmp.config.compare.score,
+					cmp.config.compare.recently_used,
+					cmp.config.compare.locality,
+					cmp.config.compare.kind,
+					cmp.config.compare.sort_text,
+					cmp.config.compare.length,
+					cmp.config.compare.order,
+				} or {
 					cmp.config.compare.offset,
 					cmp.config.compare.exact,
 					cmp.config.compare.score,
@@ -160,7 +215,8 @@ return {
 			})
 		end,
 	},
-	{
+	-- Copilot（需要 Node.js）
+	vim.fn.executable("node") == 1 and {
 		"zbirenbaum/copilot.lua",
 		cmd = "Copilot",
 		event = "InsertEnter",
@@ -206,8 +262,8 @@ return {
 				},
 			})
 			end,
-	},
-	{
+	} or nil,
+	vim.fn.executable("node") == 1 and {
 		"zbirenbaum/copilot-cmp",
 		dependencies = {
 			"zbirenbaum/copilot.lua",
@@ -216,5 +272,5 @@ return {
 		config = function()
 			require("copilot_cmp").setup()
 		end,
-	},
+	} or nil,
 }

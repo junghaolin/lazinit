@@ -38,7 +38,7 @@ echo "  🚀 ZSH 優化配置安裝腳本"
 echo "════════════════════════════════════════════════════"
 echo ""
 
-# 1. 檢查必要工具
+# 1. 檢查並安裝必要工具
 info "檢查必要工具..."
 MISSING_TOOLS=""
 
@@ -51,12 +51,38 @@ if ! command_exists git; then
 fi
 
 if [ -n "$MISSING_TOOLS" ]; then
-    error "缺少必要工具:$MISSING_TOOLS"
-    info "請先安裝: sudo apt install$MISSING_TOOLS"
-    exit 1
+    warning "缺少必要工具:$MISSING_TOOLS"
+    info "正在自動安裝..."
+    
+    # 檢查是否為 apt 系統（Debian/Ubuntu）
+    if command_exists apt; then
+        sudo apt update || { error "apt update 失敗"; exit 1; }
+        sudo apt install -y$MISSING_TOOLS || { error "安裝失敗"; exit 1; }
+        success "工具安裝完成"
+    # 檢查是否為 yum 系統（RHEL/CentOS）
+    elif command_exists yum; then
+        sudo yum install -y$MISSING_TOOLS || { error "安裝失敗"; exit 1; }
+        success "工具安裝完成"
+    # 檢查是否為 dnf 系統（Fedora）
+    elif command_exists dnf; then
+        sudo dnf install -y$MISSING_TOOLS || { error "安裝失敗"; exit 1; }
+        success "工具安裝完成"
+    # 檢查是否為 pacman 系統（Arch）
+    elif command_exists pacman; then
+        sudo pacman -Sy --noconfirm$MISSING_TOOLS || { error "安裝失敗"; exit 1; }
+        success "工具安裝完成"
+    # 檢查是否為 brew 系統（macOS）
+    elif command_exists brew; then
+        brew install$MISSING_TOOLS || { error "安裝失敗"; exit 1; }
+        success "工具安裝完成"
+    else
+        error "無法識別的套件管理器"
+        info "請手動安裝: sudo apt install$MISSING_TOOLS"
+        exit 1
+    fi
+else
+    success "所有必要工具已安裝"
 fi
-
-success "所有必要工具已安裝"
 echo ""
 
 # 2. 確認當前目錄
