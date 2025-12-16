@@ -6,7 +6,7 @@ do_alias(){
     alias nv='nvim'
 }
 
-if command -v batcat >/dev/null 2>&1; then
+if command -v nvim >/dev/null 2>&1; then
   do_alias
   return
 fi
@@ -24,7 +24,8 @@ _lazy_vi_alias_init() {
 
   # 移除暫時函數，讓 alias 生效
   unfunction vi nv 2>/dev/null
-  echo "[lazy_vi] Aliases for '$1' initialized. Please rerun '$1'."
+  echo "[lazy_vi] Aliases for '$1' initialized. Running command..."
+  eval "$1" "${@:2}"
 }
 
 # 函數 override

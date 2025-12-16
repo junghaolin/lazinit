@@ -37,7 +37,8 @@ _lazy_grc_alias_init() {
 
   # 移除暫時函數，後續直接 alias
   unfunction grc netstat lsof ping traceroute ifconfig mount ps df du dig diff wdiff route mtr git docker 2>/dev/null
-  echo "[lazy_grc] Aliases for '$1' initialized. Please rerun '$1'."
+  echo "[lazy_grc] Aliases for '$1' initialized. Running command..."
+  eval "$1" "${@:2}"
 }
 
 # 需要覆蓋的所有命令都定義函數

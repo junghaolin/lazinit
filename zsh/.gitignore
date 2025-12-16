@@ -1,0 +1,32 @@
+# 編譯後的檔案
+*.zwc
+
+# History 檔案
+.zsh_history
+
+# 個人化配置（機器特定）
+.zshrc.local
+
+# 備份檔案
+*.backup.*
+*.bk
+*.orig.bk
+
+# 臨時檔案
+*.tmp
+*.swp
+*.swo
+*~
+
+# Zinit 相關（通常在 ~/.local/share/zinit）
+# 如果你把 zinit 放在這裡，取消註釋：
+# .zinit/
+
+# Log 檔案
+*.log
+
+# macOS
+.DS_Store
+
+# 測試檔案
+test_*.sh
