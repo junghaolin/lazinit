@@ -200,19 +200,28 @@ else
     $SUDO apt install $(cat actual_apt_pks) -y
     
     success "Linux 包安裝完成"
+    
+    # 刷新命令哈希表，确保新安装的命令可用
+    hash -r
 fi
 
 # ==================== 配置 ZSH ====================
-if [ "$INSTALL_ZSH" = true ]; then
-    section "配置 ZSH"
+section "配置 ZSH"
 
-    ZSHP="$SCRIPT_DIR/zsh"
-
-    if [ ! -d "$ZSHP" ]; then
-        error "找不到 zsh 目录: $ZSHP"
-        exit 1
-    fi
+# 再次检查 zsh 是否已安装（刷新后）
+if ! command -v zsh >/dev/null 2>&1; then
+    error "zsh 未安裝或安裝失敗，無法繼續配置"
+    info "請檢查包安裝是否成功，或手動安裝: sudo apt install zsh"
+    exit 1
 fi
+
+ZSHP="$SCRIPT_DIR/zsh"
+
+if [ ! -d "$ZSHP" ]; then
+    error "找不到 zsh 目录: $ZSHP"
+    exit 1
+fi
+
 cd ~
 
 # 備份現有配置
@@ -312,6 +321,9 @@ section "設置預設 Shell"
 
 if ! command -v zsh >/dev/null 2>&1; then
     warning "zsh 未安裝，跳過設置預設 shell"
+    if [ "$AUTO_INSTALL_ALL" = true ]; then
+        error "自動模式需要先安裝 zsh，請檢查包安裝是否成功"
+    fi
 elif [ "$SHELL" != "$(command -v zsh)" ]; then
     warning "當前預設 shell 不是 zsh"
     echo ""
@@ -327,11 +339,18 @@ elif [ "$SHELL" != "$(command -v zsh)" ]; then
     
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         if [ "$OS" = "macos" ]; then
-            chsh -s "$(command -v zsh)"
+            if chsh -s "$(command -v zsh)"; then
+                success "預設 shell 已設為 zsh（需要重新登入生效）"
+            else
+                error "設置失敗"
+            fi
         else
-            $SUDO chsh -s "$(command -v zsh)" "$USER"
+            if $SUDO chsh -s "$(command -v zsh)" "$USER"; then
+                success "預設 shell 已設為 zsh（需要重新登入生效）"
+            else
+                error "設置失敗，請手動執行: sudo chsh -s $(command -v zsh) $USER"
+            fi
         fi
-        success "預設 shell 已設為 zsh（需要重新登入生效）"
     fi
 else
     success "預設 shell 已經是 zsh"
