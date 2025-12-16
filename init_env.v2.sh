@@ -144,24 +144,44 @@ if [ "$OS" = "macos" ]; then
     cat "$PKG_LIST_FILE" > actual_apt_pks
     success "macOS: 將使用所有列出的包"
 else
-    # Linux: 檢查 apt 可用性
+    # Linux: 檢查 apt 可用性並過濾已安裝的包
     info "檢查 apt 包可用性..."
-    cat "$PKG_LIST_FILE" | tr ' ' '\n' | while read pkg; do
+    
+    PACKAGES_TO_INSTALL=""
+    
+    for pkg in $(cat "$PKG_LIST_FILE" | tr ' ' '\n'); do
         if [ -z "$pkg" ]; then continue; fi
         
-        if apt-cache show "$pkg" >/dev/null 2>&1; then
-            if apt-cache policy "$pkg" | grep -q 'Candidate: (none)'; then
-                warning "跳過 $pkg (無安裝候選)"
-                continue
-            else
-                echo "$pkg"
-            fi
-        else
-            warning "跳過 $pkg (不存在)"
+        # 檢查包是否存在於倉庫
+        if ! apt-cache show "$pkg" >/dev/null 2>&1; then
+            warning "跳過 $pkg (倉庫中不存在)"
+            continue
         fi
-    done | paste -sd ' ' | tee -a actual_apt_pks
+        
+        # 檢查包是否已安裝
+        if dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
+            info "跳過 $pkg (已安裝)"
+            continue
+        fi
+        
+        # 檢查是否有安裝候選
+        if apt-cache policy "$pkg" | grep -q 'Candidate: (none)'; then
+            warning "跳過 $pkg (無安裝候選)"
+            continue
+        fi
+        
+        # 添加到安裝列表
+        PACKAGES_TO_INSTALL="$PACKAGES_TO_INSTALL $pkg"
+    done
     
-    success "已過濾可用的包"
+    # 寫入文件
+    echo "$PACKAGES_TO_INSTALL" | tr -s ' ' > actual_apt_pks
+    
+    if [ -n "$PACKAGES_TO_INSTALL" ]; then
+        success "待安裝的包:$PACKAGES_TO_INSTALL"
+    else
+        success "所有包都已安裝"
+    fi
 fi
 
 # ==================== 安裝包 ====================
@@ -196,10 +216,15 @@ else
     info "升級系統..."
     $SUDO apt upgrade -y
     
-    info "安裝包..."
-    $SUDO apt install $(cat actual_apt_pks) -y
-    
-    success "Linux 包安裝完成"
+    # 檢查是否有包需要安裝
+    PACKAGES=$(cat actual_apt_pks | tr -s ' ')
+    if [ -n "$PACKAGES" ]; then
+        info "安裝包..."
+        $SUDO apt install $PACKAGES -y
+        success "Linux 包安裝完成"
+    else
+        success "沒有新包需要安裝"
+    fi
     
     # 刷新命令哈希表，确保新安装的命令可用
     hash -r
