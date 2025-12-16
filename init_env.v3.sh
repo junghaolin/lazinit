@@ -288,22 +288,17 @@ EOF
         success "預設 shell 已經是 zsh"
     fi
     
-    # 7. 配置 Powerlevel10k 主題（如果需要）
-    if [ "$AUTO_INSTALL_ALL" = true ]; then
-        info "自動配置 Powerlevel10k 主題..."
-        
-        # 創建 p10k 配置文件，使用預設答案
-        if [ ! -f "$HOME/.p10k.zsh" ]; then
-            info "首次啟動 zsh 以安裝插件和配置主題..."
-            
-            # 使用預設答案自動配置 p10k
-            # yyy1y32222221n1
-            echo "yyy1y32222221n1" | zsh -i -c "exit" 2>/dev/null || true
-            
+    # 7. 配置 Powerlevel10k 主題
+    if [ ! -f "$HOME/.p10k.zsh" ]; then
+        if [ -f "$ZSHP/p10k.zsh" ]; then
+            info "複製 Powerlevel10k 預設配置..."
+            cp "$ZSHP/p10k.zsh" "$HOME/.p10k.zsh"
             success "Powerlevel10k 主題已配置"
         else
-            info "Powerlevel10k 配置已存在"
+            info "首次啟動 zsh 時會自動配置 Powerlevel10k 主題"
         fi
+    else
+        success "Powerlevel10k 配置已存在"
     fi
     
     echo ""
