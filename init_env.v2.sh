@@ -19,6 +19,9 @@ warning() { echo -e "${YELLOW}⚠${NC} $1"; }
 error() { echo -e "${RED}✗${NC} $1"; }
 section() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}\n"; }
 
+# ==================== 腳本目錄 ====================
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # ==================== 環境檢測 ====================
 section "環境檢測"
 
@@ -191,7 +194,6 @@ fi
 if [ "$INSTALL_ZSH" = true ]; then
     section "配置 ZSH"
 
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     ZSHP="$SCRIPT_DIR/zsh"
 
     if [ ! -d "$ZSHP" ]; then
