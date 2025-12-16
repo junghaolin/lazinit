@@ -20,6 +20,14 @@ INSTALL_NEOVIM=false
 INSTALL_DOCKER=false
 INSTALL_GENERAL=false
 
+# 環境變量
+OS=""
+PKG_MANAGER=""
+IS_VM=false
+IS_WORK=false
+SUDO="sudo"
+HOSTNAME=""
+
 # ==================== 顏色定義 ====================
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -108,14 +116,14 @@ detect_environment() {
         info "檢測到 VM 環境: $HOSTNAME"
     elif [ "$OS" = "linux" ]; then
         if command -v systemd-detect-virt >/dev/null 2>&1; then
-            VIRT=$(systemd-detect-virt)
-            if [ "$VIRT" != "none" ]; then
+            VIRT=$(systemd-detect-virt 2>/dev/null || echo "none")
+            if [ "$VIRT" != "none" ] && [ -n "$VIRT" ]; then
                 IS_VM=true
                 info "檢測到虛擬化環境: $VIRT"
             fi
         fi
         if [ -f /proc/meminfo ]; then
-            TOTAL_MEM=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+            TOTAL_MEM=$(grep MemTotal /proc/meminfo | awk '{print $2}') || TOTAL_MEM=999999999
             if [ "$TOTAL_MEM" -lt 4000000 ]; then
                 IS_VM=true
                 info "檢測到低記憶體環境 (< 4GB)"
@@ -467,10 +475,21 @@ main() {
     fi
     
     # 執行安裝任務
-    [ "$INSTALL_ZSH" = true ] && install_zsh
-    [ "$INSTALL_GENERAL" = true ] && install_general
-    [ "$INSTALL_NEOVIM" = true ] && install_neovim
-    [ "$INSTALL_DOCKER" = true ] && install_docker
+    if [ "$INSTALL_ZSH" = true ]; then
+        install_zsh
+    fi
+    
+    if [ "$INSTALL_GENERAL" = true ]; then
+        install_general
+    fi
+    
+    if [ "$INSTALL_NEOVIM" = true ]; then
+        install_neovim
+    fi
+    
+    if [ "$INSTALL_DOCKER" = true ]; then
+        install_docker
+    fi
     
     # 完成提示
     section "安裝完成"

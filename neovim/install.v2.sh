@@ -217,18 +217,22 @@ install_lsp_markdown() {
         return
     fi
     
+    local DOWNLOAD_URL
     if [ "$OS" = "macos" ]; then
-        curl -L -o /tmp/marksman.tar.gz \
-            https://github.com/artempyanykh/marksman/releases/latest/download/marksman-macos-x64.tar.gz
+        DOWNLOAD_URL="https://github.com/artempyanykh/marksman/releases/latest/download/marksman-macos-x64"
     else
-        curl -L -o /tmp/marksman.tar.gz \
-            https://github.com/artempyanykh/marksman/releases/latest/download/marksman-linux-x64.tar.gz
+        DOWNLOAD_URL="https://github.com/artempyanykh/marksman/releases/latest/download/marksman-linux-x64"
     fi
     
-    tar -xzf /tmp/marksman.tar.gz -C /tmp
-    $SUDO mv /tmp/marksman /usr/local/bin/
-    rm -f /tmp/marksman.tar.gz
-    success "Markdown LSP 安裝完成"
+    info "下載 marksman..."
+    if curl -fsSL -o /tmp/marksman "$DOWNLOAD_URL"; then
+        chmod +x /tmp/marksman
+        $SUDO mv /tmp/marksman /usr/local/bin/
+        success "Markdown LSP 安裝完成"
+    else
+        warning "marksman 下載失敗，跳過"
+        return 1
+    fi
 }
 
 # Lua LSP
