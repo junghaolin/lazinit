@@ -22,8 +22,9 @@ vim.opt.tabstop = 2 -- Tab 鍵顯示為 2 個空格 (Display Tab as 2 spaces)
 -- 設置 Neovim 使用 Treesitter 的折疊表達式
 -- Set Neovim to use Treesitter folding expression
 vim.o.foldmethod = "expr"
-vim.o.foldexpr = "nvim_treesitter#foldexpr()"
-vim.o.foldlevel = 1
+vim.o.foldexpr = "v:lua.vim.treesitter.foldexpr()"  -- Neovim 0.11+ 新 API
+vim.o.foldlevel = 99  -- 默認展開所有折疊
+vim.o.foldlevelstart = 99
 
 -- =====================================================
 -- 2. 插件管理 (Plugin Management)
@@ -163,8 +164,9 @@ end
 -- 5. 自動命令 (Autocommands)
 -- =====================================================
 
--- 啟動時自動打開 Neotree
--- Automatically open Neotree on startup
+-- 啟動時自動打開 Neotree（已禁用以提升性能）
+-- Automatically open Neotree on startup (disabled for better performance)
+--[[
 vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
 		if vim.fn.argc() == 0 then
@@ -176,6 +178,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
 		end
 	end,
 })
+]]
 --[[
 vim.api.nvim_create_autocmd("BufReadPre", {
 	pattern = "*",

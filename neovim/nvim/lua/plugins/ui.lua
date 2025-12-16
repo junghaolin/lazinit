@@ -34,7 +34,32 @@ return {
 			"nvim-tree/nvim-web-devicons",
 			"MunifTanjim/nui.nvim",
 		},
-		config = true
+		config = function()
+			require("neo-tree").setup({
+				close_if_last_window = true, -- 最後一個窗口時自動關閉
+				popup_border_style = "rounded",
+				enable_git_status = true,
+				enable_diagnostics = true,
+				window = {
+					position = "left",
+					width = 30,
+					mapping_options = {
+						noremap = true,
+						nowait = true,
+					},
+				},
+				filesystem = {
+					filtered_items = {
+						visible = false, -- 隱藏 dotfiles
+						hide_dotfiles = true,
+						hide_gitignored = true,
+					},
+					follow_current_file = {
+						enabled = true, -- 自動跟隨當前文件
+					},
+					use_libuv_file_watcher = true, -- 自動刷新
+				},
+			})
 		end,
 	},
 	{ "nvim-tree/nvim-web-devicons" },
@@ -52,16 +77,23 @@ return {
 			rocks = { "magick" },
 		},
 	},]]
+	--[[
 	{
 		"edluffy/hologram.nvim",
+		enabled = false, -- 禁用以避免與 image.nvim 衝突
 		config = function()
 			require("hologram").setup({
 				auto_display = true,
 			})
 		end,
 	},
+	]]
 	{
 		"3rd/image.nvim",
+		event = "VeryLazy", -- 延迟加载避免启动错误
+		enabled = function()
+			return os.getenv("TERM_PROGRAM") ~= nil -- 只在终端环境中启用
+		end,
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 		},

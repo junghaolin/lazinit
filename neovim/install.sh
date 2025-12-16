@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# ==================== 安裝 Neovim 0.11.5 ====================
+echo "安裝 Neovim 0.11.5..."
+
+# 下載 AppImage
+wget -q --show-progress -O /tmp/nvim.appimage \
+    https://github.com/neovim/neovim/releases/download/v0.11.5/nvim-linux-x86_64.appimage
+
+# 安裝 FUSE 依賴（AppImage 需要）
+sudo apt update
+sudo apt install -y fuse libfuse2
+
+# 設置權限並安裝
+chmod +x /tmp/nvim.appimage
+sudo mv /tmp/nvim.appimage /usr/local/bin/nvim
+
+echo "Neovim 安裝完成: $(nvim --version | head -n1)"
+
+# ==================== 安裝基礎工具 ====================
 sudo apt update
 sudo apt install git
 
@@ -33,12 +51,11 @@ cd 3rd/luamake
 ./compile/install.sh
 cd ../..
 ./3rd/luamake/luamake rebuild
-sudo mv build/bin/lua-language-server /usr/local/bin/
-sudo mv build/bin/bootstrap /usr/local/bin/
-sudo mv build/bin/main.lua /usr/local/bin/
 
-sudo mkdir -p /opt
-sudo mv build/bin/main.lua /opt/
+# 安裝到 /opt 並創建符號連結
+sudo mkdir -p /opt/lua-language-server
+sudo cp -r build/bin/* /opt/lua-language-server/
+sudo ln -sf /opt/lua-language-server/lua-language-server /usr/local/bin/lua-language-server
 
 #YAML
 npm install -g yaml-language-server
