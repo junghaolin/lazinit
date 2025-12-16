@@ -93,6 +93,54 @@ echo "  Work: $IS_WORK"
 echo "  Hostname: $HOSTNAME"
 echo ""
 
+# ==================== 安裝必需工具 ====================
+section "安裝必需工具"
+
+# 確定是否需要 sudo
+SUDO="sudo"
+if [ "$(id -u)" == "0" ]; then
+    SUDO=""
+    warning "以 root 運行，不使用 sudo"
+fi
+
+# 安裝 zsh 和 git（必需）
+REQUIRED_TOOLS=""
+if ! command -v zsh >/dev/null 2>&1; then
+    REQUIRED_TOOLS="$REQUIRED_TOOLS zsh"
+fi
+if ! command -v git >/dev/null 2>&1; then
+    REQUIRED_TOOLS="$REQUIRED_TOOLS git"
+fi
+
+if [ -n "$REQUIRED_TOOLS" ]; then
+    warning "缺少必需工具:$REQUIRED_TOOLS"
+    info "正在自動安裝..."
+    
+    if [ "$OS" = "macos" ]; then
+        if ! command -v brew >/dev/null 2>&1; then
+            error "未安裝 Homebrew，請先安裝: https://brew.sh"
+            exit 1
+        fi
+        brew install$REQUIRED_TOOLS
+    else
+        $SUDO apt update
+        $SUDO apt install -y$REQUIRED_TOOLS
+    fi
+    
+    success "必需工具安裝完成"
+    hash -r  # 刷新命令哈希表
+else
+    success "必需工具已安裝"
+fi
+
+# 再次確認 zsh 已安裝
+if ! command -v zsh >/dev/null 2>&1; then
+    error "zsh 安裝失敗，無法繼續"
+    exit 1
+fi
+
+echo ""
+
 # ==================== 選擇包列表 ====================
 section "選擇安裝包列表"
 
@@ -185,14 +233,7 @@ else
 fi
 
 # ==================== 安裝包 ====================
-section "安裝軟件包"
-
-# 確定是否需要 sudo
-SUDO="sudo"
-if [ "$(id -u)" == "0" ]; then
-    SUDO=""
-    warning "以 root 運行，不使用 sudo"
-fi
+section "安裝其他軟件包"
 
 if [ "$OS" = "macos" ]; then
     # macOS 使用 brew
@@ -232,13 +273,6 @@ fi
 
 # ==================== 配置 ZSH ====================
 section "配置 ZSH"
-
-# 再次检查 zsh 是否已安装（刷新后）
-if ! command -v zsh >/dev/null 2>&1; then
-    error "zsh 未安裝或安裝失敗，無法繼續配置"
-    info "請檢查包安裝是否成功，或手動安裝: sudo apt install zsh"
-    exit 1
-fi
 
 ZSHP="$SCRIPT_DIR/zsh"
 
