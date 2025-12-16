@@ -1,8 +1,20 @@
 #!/bin/bash
 # Lazinit 環境初始化腳本（增強版）
 # 自動檢測環境並適配配置
+# 
+# 使用方式：
+#   ./init_env.v2.sh         # 互動模式
+#   ./init_env.v2.sh --all   # 自動安裝所有組件（無需確認）
 
 set -e  # 遇到錯誤立即停止
+
+# ==================== 參數處理 ====================
+AUTO_INSTALL_ALL=false
+if [ "$1" = "--all" ] || [ "$1" = "-a" ]; then
+    AUTO_INSTALL_ALL=true
+    echo "🚀 自動安裝模式：將安裝所有組件"
+    echo ""
+fi
 
 # ==================== 顏色定義 ====================
 RED='\033[0;31m'
@@ -303,8 +315,16 @@ if ! command -v zsh >/dev/null 2>&1; then
 elif [ "$SHELL" != "$(command -v zsh)" ]; then
     warning "當前預設 shell 不是 zsh"
     echo ""
-    read -p "是否將 zsh 設為預設 shell? [y/N] " -n 1 -r
-    echo
+    
+    # 自動模式或互動模式
+    if [ "$AUTO_INSTALL_ALL" = true ]; then
+        info "自動設置 zsh 為預設 shell..."
+        REPLY="y"
+    else
+        read -p "是否將 zsh 設為預設 shell? [y/N] " -n 1 -r
+        echo
+    fi
+    
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         if [ "$OS" = "macos" ]; then
             chsh -s "$(command -v zsh)"
@@ -363,10 +383,18 @@ echo ""
 info "提示：首次啟動 zsh 可能需要下載插件，請稍等片刻"
 
 # 提供快速安裝選項
-if [ -t 0 ]; then  # 檢查是否在交互模式
+if [ -t 0 ] || [ "$AUTO_INSTALL_ALL" = true ]; then
     echo ""
-    read -p "是否現在安裝 Neovim + LSP 環境? [y/N] " -n 1 -r
-    echo
+    
+    # 自動模式或互動模式
+    if [ "$AUTO_INSTALL_ALL" = true ]; then
+        info "自動安裝 Neovim + LSP 環境..."
+        REPLY="y"
+    else
+        read -p "是否現在安裝 Neovim + LSP 環境? [y/N] " -n 1 -r
+        echo
+    fi
+    
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo ""
         section "安裝 Neovim 環境"

@@ -181,8 +181,12 @@ if [ "$SHELL" != "$(command -v zsh)" ]; then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         info "設置 zsh 為預設 shell..."
-        chsh -s "$(command -v zsh)"
-        success "預設 shell 已設置為 zsh（需要重新登入生效）"
+        # 使用 sudo chsh 來避免 PAM 認證問題
+        if sudo chsh -s "$(command -v zsh)" "$USER"; then
+            success "預設 shell 已設置為 zsh（需要重新登入生效）"
+        else
+            error "設置失敗，請手動執行: sudo chsh -s $(command -v zsh) $USER"
+        fi
     fi
     echo ""
 fi
