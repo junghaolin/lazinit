@@ -188,16 +188,17 @@ else
 fi
 
 # ==================== 配置 ZSH ====================
-section "配置 ZSH"
+if [ "$INSTALL_ZSH" = true ]; then
+    section "配置 ZSH"
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-ZSHP="$SCRIPT_DIR/zsh"
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    ZSHP="$SCRIPT_DIR/zsh"
 
-if [ ! -d "$ZSHP" ]; then
-    error "找不到 zsh 目錄: $ZSHP"
-    exit 1
+    if [ ! -d "$ZSHP" ]; then
+        error "找不到 zsh 目录: $ZSHP"
+        exit 1
+    fi
 fi
-
 cd ~
 
 # 備份現有配置

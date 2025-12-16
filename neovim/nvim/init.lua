@@ -30,39 +30,31 @@ vim.o.foldlevelstart = 99
 -- 2. 插件管理 (Plugin Management)
 -- =====================================================
 
--- 自動安裝
+-- Bootstrap lazy.nvim （自动安装）
+-- 兼容 Neovim 0.10+ 和 0.11+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
-	vim.fn.system({
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
+	local lazyrepo = "https://github.com/folke/lazy.nvim.git"
+	local out = vim.fn.system({
 		"git",
 		"clone",
 		"--filter=blob:none",
-		"https://github.com/folke/lazy.nvim.git",
 		"--branch=stable",
+		lazyrepo,
 		lazypath,
 	})
+	
+	-- 错误处理
+	if vim.v.shell_error ~= 0 then
+		vim.api.nvim_echo({
+			{ "Failed to clone lazy.nvim:\n", "ErrorMsg" },
+			{ out, "WarningMsg" },
+			{ "\nPress any key to exit..." },
+		}, true, {})
+		vim.fn.getchar()
+		os.exit(1)
+	end
 end
-vim.opt.rtp:prepend(lazypath)
-
--- 設置 lazy.nvim 路徑
--- Set lazy.nvim path
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-
--- 如果 lazy.nvim 不存在，則克隆它
--- Clone lazy.nvim if it doesn't exist
-if vim.fn.filereadable(lazypath) == 1 then
-	vim.fn.system({
-		"git",
-		"clone",
-		"--filter=blob:none",
-		"https://github.com/folke/lazy.nvim.git",
-		"--branch=stable",
-		lazypath,
-	})
-end
-
--- 將 lazy.nvim 添加到 runtimepath
--- Add lazy.nvim to runtimepath
 vim.opt.rtp:prepend(lazypath)
 
 -- 設置 lazy.nvim

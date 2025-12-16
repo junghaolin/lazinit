@@ -84,3 +84,40 @@ sudo apt-get install libmagickwand-dev
 sudo apt-get install libgraphicsmagick1-dev
 sudo apt-get install luarocks
 sudo luarocks install magick
+
+# ==================== 預防性修復 ====================
+echo ""
+echo "執行預防性修復..."
+
+# 清理可能存在的問題鎖文件
+if [ -f "$HOME/.config/nvim/lazy-lock.json" ]; then
+    echo "發現 lazy-lock.json，備份並刪除..."
+    cp "$HOME/.config/nvim/lazy-lock.json" "$HOME/.config/nvim/lazy-lock.json.backup.$(date +%Y%m%d_%H%M%S)"
+    rm "$HOME/.config/nvim/lazy-lock.json"
+    echo "✓ 已清理鎖文件"
+fi
+
+# 清理 Neo-tree 狀態
+if [ -d "$HOME/.local/share/nvim/neo-tree" ]; then
+    echo "清理 Neo-tree 舊狀態..."
+    rm -rf "$HOME/.local/share/nvim/neo-tree"
+    echo "✓ 已清理 Neo-tree 狀態"
+fi
+
+# 確保目錄權限
+mkdir -p "$HOME/.local/share/nvim"
+mkdir -p "$HOME/.cache/nvim"
+chmod -R 755 "$HOME/.local/share/nvim" 2>/dev/null || true
+chmod -R 755 "$HOME/.cache/nvim" 2>/dev/null || true
+echo "✓ 權限檢查完成"
+
+echo ""
+echo "════════════════════════════════════════════════════"
+echo "🎉 安裝完成！"
+echo "════════════════════════════════════════════════════"
+echo ""
+echo "下一步："
+echo "1. 啟動 Neovim: nvim"
+echo "2. 等待插件自動安裝"
+echo "3. 檢查健康狀況: :checkhealth"
+echo ""

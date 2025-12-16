@@ -394,6 +394,44 @@ ln -sf "$NVIM_CONFIG" "$HOME/.config/nvim"
 success "Neovim 配置完成"
 echo "  ~/.config/nvim -> $NVIM_CONFIG"
 
+# ==================== 預防性修復 ====================
+section "預防性修復（避免常見問題）"
+
+# 1. 清理可能存在的問題鎖文件
+if [ -f "$HOME/.config/nvim/lazy-lock.json" ]; then
+    warning "發現 lazy-lock.json，備份並刪除以確保使用最新版本..."
+    cp "$HOME/.config/nvim/lazy-lock.json" "$HOME/.config/nvim/lazy-lock.json.backup.$(date +%Y%m%d_%H%M%S)"
+    rm "$HOME/.config/nvim/lazy-lock.json"
+    success "已清理鎖文件"
+fi
+
+# 2. 清理 Neo-tree 狀態（避免狀態丟失錯誤）
+if [ -d "$HOME/.local/share/nvim/neo-tree" ]; then
+    info "清理 Neo-tree 舊狀態..."
+    rm -rf "$HOME/.local/share/nvim/neo-tree"
+    success "已清理 Neo-tree 狀態"
+fi
+
+# 3. 確保數據目錄權限正確
+info "檢查目錄權限..."
+mkdir -p "$HOME/.local/share/nvim"
+mkdir -p "$HOME/.cache/nvim"
+chmod -R 755 "$HOME/.local/share/nvim" 2>/dev/null || true
+chmod -R 755 "$HOME/.cache/nvim" 2>/dev/null || true
+success "權限檢查完成"
+
+# 4. 驗證 bootstrap 代碼（檢查 init.lua）
+if [ -f "$NVIM_CONFIG/init.lua" ]; then
+    if grep -q "vim.uv or vim.loop" "$NVIM_CONFIG/init.lua"; then
+        success "Bootstrap 代碼已是最新版本（兼容 0.10+/0.11+）"
+    else
+        warning "Bootstrap 代碼可能需要更新"
+        info "如遇問題，請參考 MACOS_FIXES.md"
+    fi
+fi
+
+success "預防性修復完成"
+
 # ==================== 完成 ====================
 echo ""
 echo "════════════════════════════════════════════════════"
@@ -403,6 +441,7 @@ echo ""
 echo "📋 安裝摘要："
 echo "  模式: $INSTALL_MODE"
 echo "  OS: $OS"
+echo "  已執行預防性修復：清理鎖文件、Neo-tree 狀態、權限檢查"
 echo ""
 echo "🚀 下一步："
 echo ""
@@ -410,11 +449,16 @@ echo "1. 啟動 Neovim："
 echo "   nvim"
 echo ""
 echo "2. 首次啟動會自動安裝插件，請等待完成"
+echo "   - lazy.nvim 會自動 bootstrap"
+echo "   - 所有插件會自動下載"
+echo "   - LSP 服務器已預先安裝"
 echo ""
-echo "3. 檢查 LSP 狀態："
-echo "   :LspInfo"
+echo "3. 如果遇到問題，檢查健康狀況："
+echo "   :checkhealth"
+echo "   :Lazy health"
 echo ""
 echo "4. 查看已安裝的 LSP："
+echo "   :LspInfo"
 if [ "$INSTALL_MODE" != "minimal" ]; then
     echo ""
     command -v marksman >/dev/null 2>&1 && echo "   ✓ Markdown (marksman)"
