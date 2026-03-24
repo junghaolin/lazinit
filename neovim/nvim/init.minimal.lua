@@ -19,7 +19,7 @@ vim.opt.smartcase = true
 -- 2. 極簡插件管理 (Minimal Plugins)
 -- =====================================================
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
   vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/folke/lazy.nvim.git", "--branch=stable", lazypath })
 end
 vim.opt.rtp:prepend(lazypath)
@@ -29,11 +29,11 @@ require("lazy").setup({
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
+    main = "nvim-treesitter.configs", -- 指定主模組，讓 lazy 自動執行 setup
     opts = {
       ensure_installed = { "c", "lua", "python", "bash", "markdown" },
       highlight = { enable = true },
     },
-    config = function(_, opts) require("nvim-treesitter.configs").setup(opts) end,
   },
   -- 2. 極速導航 (取代 Telescope，效能更高)
   {
