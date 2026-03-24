@@ -19,6 +19,7 @@ INSTALL_ZSH=false
 INSTALL_NEOVIM=false
 INSTALL_DOCKER=false
 INSTALL_GENERAL=false
+INSTALL_TMUX=false
 
 # 環境變量
 OS=""
@@ -58,12 +59,16 @@ parse_args() {
                 INSTALL_NEOVIM=true
                 INSTALL_DOCKER=true
                 INSTALL_GENERAL=true
+                INSTALL_TMUX=true
                 ;;
             --zsh)
                 INSTALL_ZSH=true
                 ;;
             --neovim)
                 INSTALL_NEOVIM=true
+                ;;
+            --tmux)
+                INSTALL_TMUX=true
                 ;;
             --docker)
                 INSTALL_DOCKER=true
@@ -77,6 +82,7 @@ parse_args() {
                 echo "  $0 --all     # 安裝所有組件"
                 echo "  $0 --zsh     # 只安裝 ZSH"
                 echo "  $0 --neovim  # 只安裝 Neovim"
+                echo "  $0 --tmux    # 只安裝 Tmux 配置"
                 echo "  $0 --docker  # 只安裝 Docker"
                 echo "  $0 --general # 只安裝通用軟件包"
                 exit 0
@@ -413,6 +419,24 @@ install_neovim() {
     echo ""
 }
 
+# ==================== 安裝 Tmux ====================
+install_tmux() {
+    section "安裝 Tmux 配置"
+    
+    local TMUX_INSTALLER="$SCRIPT_DIR/tmux/install.sh"
+    
+    if [ ! -x "$TMUX_INSTALLER" ]; then
+        error "找不到 Tmux 安裝腳本: $TMUX_INSTALLER"
+        info "請檢查文件是否存在並有執行權限"
+        return 1
+    fi
+    
+    info "運行 Tmux 安裝腳本..."
+    "$TMUX_INSTALLER"
+    
+    echo ""
+}
+
 # ==================== 安裝 Docker ====================
 install_docker() {
     section "安裝 Docker"
@@ -439,8 +463,9 @@ interactive_menu() {
     echo "  1) ZSH 配置環境"
     echo "  2) 通用軟件包 (eza, bat, ripgrep, 等)"
     echo "  3) Neovim + LSP 環境"
-    echo "  4) Docker"
-    echo "  5) 全部安裝"
+    echo "  4) Tmux 配置"
+    echo "  5) Docker"
+    echo "  6) 全部安裝"
     echo "  0) 退出"
     echo ""
     
@@ -451,11 +476,13 @@ interactive_menu() {
             1) INSTALL_ZSH=true ;;
             2) INSTALL_GENERAL=true ;;
             3) INSTALL_NEOVIM=true ;;
-            4) INSTALL_DOCKER=true ;;
-            5)
+            4) INSTALL_TMUX=true ;;
+            5) INSTALL_DOCKER=true ;;
+            6)
                 INSTALL_ZSH=true
                 INSTALL_GENERAL=true
                 INSTALL_NEOVIM=true
+                INSTALL_TMUX=true
                 INSTALL_DOCKER=true
                 ;;
             0) exit 0 ;;
@@ -483,6 +510,7 @@ main() {
     if [ "$INSTALL_ZSH" = false ] && \
        [ "$INSTALL_GENERAL" = false ] && \
        [ "$INSTALL_NEOVIM" = false ] && \
+       [ "$INSTALL_TMUX" = false ] && \
        [ "$INSTALL_DOCKER" = false ]; then
         interactive_menu
     fi
@@ -498,6 +526,10 @@ main() {
     
     if [ "$INSTALL_NEOVIM" = true ]; then
         install_neovim
+    fi
+    
+    if [ "$INSTALL_TMUX" = true ]; then
+        install_tmux
     fi
     
     if [ "$INSTALL_DOCKER" = true ]; then

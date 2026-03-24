@@ -1,0 +1,48 @@
+#!/bin/bash
+# Tmux 快速小抄 (Cheat Sheet)
+
+# 顏色定義
+BLUE='\033[1;34m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[1;36m'
+NC='\033[0m' # No Color
+
+echo -e "${CYAN}=================================================${NC}"
+echo -e "${CYAN}             🚀 Tmux 快速小抄 (Cheat Sheet)      ${NC}"
+echo -e "${CYAN}=================================================${NC}"
+echo -e "你的前綴鍵 (Prefix) 已設定為: ${YELLOW}Ctrl + a${NC}\n"
+
+echo -e "${BLUE}▶ 基礎操作 (在終端機輸入)${NC}"
+echo -e "  ${GREEN}tmux${NC}                   啟動一個新的 Tmux 會話"
+echo -e "  ${GREEN}tmux ls${NC}                列出目前所有背景的 Tmux 會話"
+echo -e "  ${GREEN}tmux attach -t 0${NC}       重新連回編號 0 的會話"
+echo -e "  ${GREEN}tmux kill-session -a${NC}   砍掉所有會話 (危險!)\n"
+
+echo -e "${BLUE}▶ 視窗 (Windows) 管理 (先按 Prefix)${NC}"
+echo -e "  ${YELLOW}Prefix + c${NC}             建立新視窗 (Create)"
+echo -e "  ${YELLOW}Prefix + p/n${NC}           切換到 上一個/下一個 視窗 (Prev/Next)"
+echo -e "  ${YELLOW}Prefix + 0~9${NC}           跳轉到指定編號的視窗"
+echo -e "  ${YELLOW}Prefix + &${NC}             關閉當前視窗 (Kill)\n"
+
+echo -e "${BLUE}▶ 窗格 (Panes) 分割與切換 (先按 Prefix)${NC}"
+echo -e "  ${YELLOW}Prefix + Ctrl-o${NC}        水平分割窗格 (左右分)"
+echo -e "  ${YELLOW}Prefix + Ctrl-e${NC}        垂直分割窗格 (上下分)"
+echo -e "  ${YELLOW}Prefix + h/j/k/l${NC}       (Vim 模式) 往 左/下/上/右 切換窗格"
+echo -e "  ${YELLOW}Prefix + z${NC}             將目前窗格「放大全螢幕 / 縮回」(Zoom)"
+echo -e "  ${YELLOW}Prefix + x${NC}             關閉當前窗格\n"
+
+echo -e "${BLUE}▶ 複製模式 (Copy Mode)${NC}"
+echo -e "  ${YELLOW}方法 1: 滑鼠直接拖曳${NC}    選取文字後放開，自動複製到系統剪貼簿！"
+echo -e "  ${YELLOW}方法 2: Prefix + [${NC}     進入 Vim 複製模式"
+echo -e "          -> 用 ${GREEN}h, j, k, l${NC} 移動游標"
+echo -e "          -> 按 ${GREEN}v${NC} 開始選取"
+echo -e "          -> 按 ${GREEN}y${NC} 複製並退出"
+echo -e "          -> 按 ${GREEN}q${NC} 或 ${GREEN}Esc${NC} 放棄退出\n"
+
+echo -e "${BLUE}▶ 系統幫助${NC}"
+echo -e "  ${YELLOW}Prefix + ?${NC}             叫出 Tmux 內建的超詳細快捷鍵清單 (按 q 退出)"
+echo -e "  ${YELLOW}Prefix + d${NC}             從當前會話「脫離」(Detach，會話會在背景繼續跑)"
+echo -e "  ${YELLOW}Prefix + r${NC}             重新載入 Tmux 設定檔\n"
+
+echo -e "${CYAN}=================================================${NC}"

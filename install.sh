@@ -15,12 +15,14 @@ Lazinit 模块化安装工具
   --skip-pkgs     跳过包安装（apt/brew）
   --skip-zsh      跳过 ZSH 配置
   --skip-nvim     跳过 Neovim 安装提示
+  --tmux          只安装 Tmux 配置
   --help, -h      显示帮助
 
 示例:
   $0                  # 完整安装
   $0 --only-zsh       # 只配置 ZSH
   $0 --only-nvim      # 只安装 Neovim
+  $0 --tmux           # 只配置 Tmux
   $0 --skip-pkgs      # 不安装包，只配置
 
 模块说明:
@@ -38,12 +40,19 @@ Lazinit 模块化安装工具
      - 安装 LSP 服务器
      - 配置插件
 
+  4. Tmux 配置
+     - 创建符号链接
+     - 支持剪贴板同步与 Vi 模式
+
 独立使用:
   # 只安装 Neovim
   cd neovim && ./install.sh
   
   # 只配置 ZSH
   cd zsh && ./install.sh
+
+  # 只配置 Tmux
+  cd tmux && ./install.sh
 EOF
 }
 
