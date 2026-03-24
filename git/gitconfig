@@ -54,3 +54,6 @@
 [merge]
     # 衝突時顯示共同祖先的代碼，這對解衝突非常有幫助
     conflictstyle = diff3
+[user]
+	email = junghaolin@gmail.com
+	name = junghaolin
