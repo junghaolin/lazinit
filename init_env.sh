@@ -1,15 +1,6 @@
 #!/bin/bash
-# Lazinit 環境初始化腳本（函數式架構）
+# Lazinit 環境初始化腳本（函數式架構 - 穩定版）
 # 自動檢測環境並適配配置
-# 
-# 使用方式：
-#   ./init_env.sh                    # 互動模式
-#   ./init_env.sh --all              # 自動安裝所有組件
-#   ./init_env.sh --minimal          # 極簡開發環境 (Tmux + Minimal Neovim)
-#   ./init_env.sh --zsh              # 只安裝 ZSH
-#   ./init_env.sh --neovim           # 只安裝 Neovim
-#   ./init_env.sh --tmux             # 只安裝 Tmux
-#   ./init_env.sh --git              # 只安裝 Git
 
 set -e  # 遇到錯誤立即停止
 
@@ -49,46 +40,25 @@ section() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}\n"; }
 
 # ==================== 參數處理 ====================
 parse_args() {
-    if [ $# -eq 0 ]; then
-        return
-    fi
+    if [ $# -eq 0 ]; then return; fi
     
     for arg in "$@"; do
         case $arg in
             --all|-a)
                 AUTO_INSTALL_ALL=true
-                INSTALL_ZSH=true
-                INSTALL_NEOVIM=true
-                INSTALL_DOCKER=true
-                INSTALL_GENERAL=true
-                INSTALL_TMUX=true
-                INSTALL_GIT=true
+                INSTALL_ZSH=true; INSTALL_NEOVIM=true; INSTALL_DOCKER=true
+                INSTALL_GENERAL=true; INSTALL_TMUX=true; INSTALL_GIT=true
                 ;;
             --minimal)
                 INSTALL_MINIMAL=true
-                INSTALL_TMUX=true
-                INSTALL_NEOVIM=true
-                INSTALL_GIT=true
-                INSTALL_GENERAL=true
+                INSTALL_TMUX=true; INSTALL_NEOVIM=true; INSTALL_GIT=true; INSTALL_GENERAL=true
                 ;;
-            --zsh)
-                INSTALL_ZSH=true
-                ;;
-            --neovim)
-                INSTALL_NEOVIM=true
-                ;;
-            --tmux)
-                INSTALL_TMUX=true
-                ;;
-            --git)
-                INSTALL_GIT=true
-                ;;
-            --docker)
-                INSTALL_DOCKER=true
-                ;;
-            --general)
-                INSTALL_GENERAL=true
-                ;;
+            --zsh) INSTALL_ZSH=true ;;
+            --neovim) INSTALL_NEOVIM=true ;;
+            --tmux) INSTALL_TMUX=true ;;
+            --git) INSTALL_GIT=true ;;
+            --docker) INSTALL_DOCKER=true ;;
+            --general) INSTALL_GENERAL=true ;;
             --help|-h)
                 echo "使用方式："
                 echo "  $0           # 互動模式"
@@ -100,13 +70,8 @@ parse_args() {
                 echo "  $0 --git     # 只安裝 Git 配置"
                 echo "  $0 --docker  # 只安裝 Docker"
                 echo "  $0 --general # 只安裝通用軟件包"
-                exit 0
-                ;;
-            *)
-                error "未知參數: $arg"
-                echo "使用 --help 查看幫助"
-                exit 1
-                ;;
+                exit 0 ;;
+            *) error "未知參數: $arg"; exit 1 ;;
         esac
     done
 }
@@ -129,48 +94,66 @@ detect_environment() {
     elif [ "$OS" = "linux" ]; then
         if command -v systemd-detect-virt >/dev/null 2>&1; then
             VIRT=$(systemd-detect-virt 2>/dev/null || echo "none")
-            [ "$VIRT" != "none" ] && [ -n "$VIRT" ] && IS_VM=true && info "檢測到虛擬化環境: $VIRT"
+            if [ "$VIRT" != "none" ] && [ -n "$VIRT" ]; then
+                IS_VM=true; info "檢測到虛擬化環境: $VIRT"
+            fi
         fi
         if [ -f /proc/meminfo ]; then
             TOTAL_MEM=$(grep MemTotal /proc/meminfo | awk '{print $2}') || TOTAL_MEM=999999999
-            [ "$TOTAL_MEM" -lt 4000000 ] && IS_VM=true && info "檢測到低記憶體環境 (< 4GB)"
+            if [ "$TOTAL_MEM" -lt 4000000 ]; then
+                IS_VM=true; info "檢測到低記憶體環境 (< 4GB)"
+            fi
         fi
     fi
     
     IS_WORK=false
-    [[ "$HOSTNAME" =~ work ]] || [[ "$HOSTNAME" =~ office ]] && IS_WORK=true && warning "檢測到工作環境"
+    if [[ "$HOSTNAME" =~ work ]] || [[ "$HOSTNAME" =~ office ]]; then
+        IS_WORK=true; warning "檢測到工作環境"
+    fi
     
     SUDO="sudo"
-    [ "$(id -u)" == "0" ] && SUDO="" && warning "以 root 運行，不使用 sudo"
+    if [ "$(id -u)" == "0" ]; then
+        SUDO=""; warning "以 root 運行，不使用 sudo"
+    fi
 }
 
 # ==================== 安裝 ZSH ====================
 install_zsh() {
     section "安裝和配置 ZSH"
     local REQUIRED_TOOLS=""
-    ! command -v zsh >/dev/null 2>&1 && REQUIRED_TOOLS="$REQUIRED_TOOLS zsh"
-    ! command -v git >/dev/null 2>&1 && REQUIRED_TOOLS="$REQUIRED_TOOLS git"
+    if ! command -v zsh >/dev/null 2>&1; then REQUIRED_TOOLS="$REQUIRED_TOOLS zsh"; fi
+    if ! command -v git >/dev/null 2>&1; then REQUIRED_TOOLS="$REQUIRED_TOOLS git"; fi
     
     if [ -n "$REQUIRED_TOOLS" ]; then
         info "正在安裝必需工具: $REQUIRED_TOOLS"
-        [ "$OS" = "macos" ] && brew install$REQUIRED_TOOLS || ($SUDO apt update && $SUDO apt install -y$REQUIRED_TOOLS)
+        if [ "$OS" = "macos" ]; then
+            brew install $REQUIRED_TOOLS
+        else
+            $SUDO apt update && $SUDO apt install -y $REQUIRED_TOOLS
+        fi
     fi
     
     local ZSHP="$SCRIPT_DIR/zsh"
-    [ ! -d "$ZSHP" ] && error "找不到 zsh 配置目錄" && return 1
+    if [ ! -d "$ZSHP" ]; then error "找不到 zsh 配置目錄"; return 1; fi
     
     cd ~
-    [ -f .zshrc ] && [ ! -L .zshrc ] && mv .zshrc ".zshrc.backup.$(date +%Y%m%d_%H%M%S)"
-    [ -d .zsh ] && [ ! -L .zsh ] && mv .zsh ".zsh.backup.$(date +%Y%m%d_%H%M%S)"
+    if [ -f .zshrc ] && [ ! -L .zshrc ]; then mv .zshrc ".zshrc.backup.$(date +%Y%m%d_%H%M%S)"; fi
+    if [ -d .zsh ] && [ ! -L .zsh ]; then mv .zsh ".zsh.backup.$(date +%Y%m%d_%H%M%S)"; fi
     
     ln -sf "$ZSHP/zshrc" ~/.zshrc
     ln -sf "$ZSHP/zsh" ~/.zsh
     success "ZSH 配置完成"
     
-    [ ! -d "$HOME/.local/share/zinit/zinit.git" ] && git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" 2>/dev/null
+    if [ ! -d "$HOME/.local/share/zinit/zinit.git" ]; then
+        git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" 2>/dev/null || true
+    fi
     
     if command -v zsh >/dev/null 2>&1; then
-        [ -x "$ZSHP/utils/recompile.sh" ] && "$ZSHP/utils/recompile.sh" || (zsh -c "zcompile ~/.zshrc" 2>/dev/null || true)
+        if [ -x "$ZSHP/utils/recompile.sh" ]; then
+            "$ZSHP/utils/recompile.sh" || true
+        else
+            zsh -c "zcompile ~/.zshrc" 2>/dev/null || true
+        fi
     fi
 }
 
@@ -178,8 +161,8 @@ install_zsh() {
 install_general() {
     section "安裝通用軟件包"
     local PKG_LIST_FILE="$SCRIPT_DIR/init_apt_pks"
-    [ "$IS_VM" = true ] && PKG_LIST_FILE="$SCRIPT_DIR/init_apt_pks.vm"
-    [ "$INSTALL_MINIMAL" = true ] && PKG_LIST_FILE="$SCRIPT_DIR/init_apt_pks.minimal"
+    if [ "$IS_VM" = true ]; then PKG_LIST_FILE="$SCRIPT_DIR/init_apt_pks.vm"; fi
+    if [ "$INSTALL_MINIMAL" = true ]; then PKG_LIST_FILE="$SCRIPT_DIR/init_apt_pks.minimal"; fi
     
     info "使用包列表: $(basename $PKG_LIST_FILE)"
     info "檢查包可用性..."
@@ -187,14 +170,18 @@ install_general() {
     for pkg in $(cat "$PKG_LIST_FILE" | tr ' ' '\n'); do
         [ -z "$pkg" ] && continue
         if [ "$OS" = "linux" ]; then
-            ! apt-cache show "$pkg" >/dev/null 2>&1 && continue
-            dpkg -l "$pkg" 2>/dev/null | grep -q "^ii" && continue
+            if ! apt-cache show "$pkg" >/dev/null 2>&1; then continue; fi
+            if dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then continue; fi
         fi
         PACKAGES_TO_INSTALL="$PACKAGES_TO_INSTALL $pkg"
     done
     
     if [ -n "$PACKAGES_TO_INSTALL" ]; then
-        [ "$OS" = "macos" ] && (brew update && brew install $PACKAGES_TO_INSTALL) || ($SUDO apt update && $SUDO apt install -y $PACKAGES_TO_INSTALL)
+        if [ "$OS" = "macos" ]; then
+            brew update && brew install $PACKAGES_TO_INSTALL
+        else
+            $SUDO apt update && $SUDO apt upgrade -y && $SUDO apt install -y $PACKAGES_TO_INSTALL
+        fi
     fi
 }
 
@@ -203,7 +190,7 @@ install_neovim() {
     section "安裝 Neovim 環境"
     local NEOVIM_INSTALLER="$SCRIPT_DIR/neovim/install.sh"
     local ARGS=""
-    [ "$INSTALL_MINIMAL" = true ] && ARGS="--minimal"
+    if [ "$INSTALL_MINIMAL" = true ]; then ARGS="--minimal"; fi
     
     if [ -x "$NEOVIM_INSTALLER" ]; then
         "$NEOVIM_INSTALLER" $ARGS
@@ -216,21 +203,33 @@ install_neovim() {
 install_tmux() {
     section "安裝 Tmux 配置"
     local TMUX_INSTALLER="$SCRIPT_DIR/tmux/install.sh"
-    [ -x "$TMUX_INSTALLER" ] && "$TMUX_INSTALLER" || error "找不到 Tmux 安裝腳本"
+    if [ -x "$TMUX_INSTALLER" ]; then
+        "$TMUX_INSTALLER"
+    else
+        error "找不到 Tmux 安裝腳本"
+    fi
 }
 
 # ==================== 安裝 Git ====================
 install_git() {
     section "安裝 Git 配置"
     local GIT_INSTALLER="$SCRIPT_DIR/git/install.sh"
-    [ -x "$GIT_INSTALLER" ] && "$GIT_INSTALLER" || error "找不到 Git 安裝腳本"
+    if [ -x "$GIT_INSTALLER" ]; then
+        "$GIT_INSTALLER"
+    else
+        error "找不到 Git 安裝腳本"
+    fi
 }
 
 # ==================== 安裝 Docker ====================
 install_docker() {
     section "安裝 Docker"
     local DOCKER_INSTALLER="$SCRIPT_DIR/install_docker_apt.sh"
-    [ -x "$DOCKER_INSTALLER" ] && "$DOCKER_INSTALLER" || error "找不到 Docker 安裝腳本"
+    if [ -x "$DOCKER_INSTALLER" ]; then
+        "$DOCKER_INSTALLER"
+    else
+        error "找不到 Docker 安裝腳本"
+    fi
 }
 
 # ==================== 互動選擇 ====================
@@ -277,12 +276,12 @@ main() {
         interactive_menu
     fi
     
-    [ "$INSTALL_ZSH" = true ] && install_zsh
-    [ "$INSTALL_GENERAL" = true ] && install_general
-    [ "$INSTALL_TMUX" = true ] && install_tmux
-    [ "$INSTALL_GIT" = true ] && install_git
-    [ "$INSTALL_NEOVIM" = true ] && install_neovim
-    [ "$INSTALL_DOCKER" = true ] && install_docker
+    if [ "$INSTALL_ZSH" = true ]; then install_zsh; fi
+    if [ "$INSTALL_GENERAL" = true ]; then install_general; fi
+    if [ "$INSTALL_TMUX" = true ]; then install_tmux; fi
+    if [ "$INSTALL_GIT" = true ]; then install_git; fi
+    if [ "$INSTALL_NEOVIM" = true ]; then install_neovim; fi
+    if [ "$INSTALL_DOCKER" = true ]; then install_docker; fi
     
     success "🎉 初始化完成！"
 }
