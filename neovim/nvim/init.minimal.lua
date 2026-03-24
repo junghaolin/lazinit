@@ -1,8 +1,8 @@
--- Neovim 極簡化配置 (Minimal Mode)
+-- Neovim 極簡化配置 (Minimal Mode - 2026 穩定版)
 -- 適用於：樹莓派、開發板、或資源受限環境
 
 -- =====================================================
--- 1. 基本設定 (Basic Settings)
+-- 1. 基本設定
 -- =====================================================
 vim.g.mapleader = " "
 vim.opt.clipboard:append("unnamedplus")
@@ -16,7 +16,7 @@ vim.opt.ignorecase = true
 vim.opt.smartcase = true
 
 -- =====================================================
--- 2. 極簡插件管理 (Minimal Plugins)
+-- 2. 極簡插件管理 (使用 Lazy.nvim)
 -- =====================================================
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
@@ -25,29 +25,38 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-  -- 1. 語法高亮 (核心)
+  -- 1. 語法高亮 (最新 v1.0 適配版)
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    main = "nvim-treesitter.configs", -- 指定主模組，讓 lazy 自動執行 setup
+    -- 使用 opts 而非 config 函數，這是目前最穩定的做法
     opts = {
       ensure_installed = { "c", "lua", "python", "bash", "markdown" },
       highlight = { enable = true },
     },
+    config = function(_, opts)
+      -- 增加 pcall 以應對外掛架構變動
+      local ok, configs = pcall(require, "nvim-treesitter.configs")
+      if ok then
+        configs.setup(opts)
+      else
+        -- 如果是新版 v1.0+，直接呼叫內建 setup
+        require("nvim-treesitter").setup(opts)
+      end
+    end,
   },
-  -- 2. 極速導航 (取代 Telescope，效能更高)
+  -- 2. 極速導航 (fzf-lua)
   {
     "ibhagwan/fzf-lua",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     keys = {
       { "<leader>ff", "<cmd>FzfLua files<cr>", desc = "Find Files" },
       { "<leader>sg", "<cmd>FzfLua live_grep<cr>", desc = "Search Grep" },
-      { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "Buffers" },
       { "<C-e>", "<cmd>FzfLua live_grep<cr>", desc = "Global Search" },
     },
     opts = {}
   },
-  -- 3. 檔案目錄 (輕量化)
+  -- 3. 檔案目錄
   {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",
@@ -59,7 +68,7 @@ require("lazy").setup({
       filesystem = { filtered_items = { visible = true } }
     }
   },
-  -- 4. 終端機 (必備)
+  -- 4. 終端機
   {
     "akinsho/toggleterm.nvim",
     version = "*",
@@ -69,7 +78,7 @@ require("lazy").setup({
 })
 
 -- =====================================================
--- 3. 快捷鍵 (Keymaps)
+-- 3. 快捷鍵
 -- =====================================================
 local map = vim.keymap.set
 map("n", "<Tab>", ":bnext<CR>", { silent = true })

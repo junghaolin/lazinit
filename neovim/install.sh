@@ -1,10 +1,10 @@
 #!/bin/bash
-# Neovim + LSP 環境安裝腳本（增強版）
-# 支援跨平台、可選安裝、環境檢測、極簡模式、ARM64 適配
+# Neovim + LSP 環境安裝腳本（完全修復版）
+# 支援 ARM64 (Orange Pi), 穩定版本偵測, 極簡模式
 
-set -e  # 遇到錯誤立即停止
+set -e
 
-# ==================== 顏色定義 ====================
+# 顏色定義
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -12,173 +12,112 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# ==================== 輸出函數 ====================
 info() { echo -e "${BLUE}ℹ${NC} $1"; }
 success() { echo -e "${GREEN}✓${NC} $1"; }
 warning() { echo -e "${YELLOW}⚠${NC} $1"; }
 error() { echo -e "${RED}✗${NC} $1"; }
 section() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}\n"; }
 
-# ==================== 參數解析 ====================
+# 參數解析
 REINSTALL_DEEP=false
 INSTALL_MINIMAL=false
-
 for arg in "$@"; do
     case $arg in
-        --reinstall)
-            REINSTALL_DEEP=true
-            warning "啟動深度重裝模式 (--reinstall)"
-            ;;
-        --minimal)
-            INSTALL_MINIMAL=true
-            warning "啟動極簡安裝模式 (--minimal)"
-            info "這將只安裝核心工具與極簡版配置，不安裝 LSP 或 NVM"
-            ;;
+        --reinstall) REINSTALL_DEEP=true ;;
+        --minimal) INSTALL_MINIMAL=true ;;
     esac
 done
 
-# ==================== 環境檢測 ====================
-section "環境檢測"
+# 環境檢測
+if [[ "$OSTYPE" == "darwin"* ]]; then OS="macos"; else OS="linux"; fi
+SUDO="sudo"; [ "$(id -u)" == "0" ] && SUDO=""
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    OS="macos"
-    info "檢測到 macOS"
-elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    OS="linux"
-    info "檢測到 Linux"
-else
-    error "不支援的操作系統: $OSTYPE"
-    exit 1
-fi
-
-SUDO="sudo"
-if [ "$(id -u)" == "0" ]; then
-    SUDO=""
-    warning "以 root 運行，不使用 sudo"
-fi
-
-# ==================== 深度清理 (Reinstall Mode) ====================
+# 深度清理
 if [ "$REINSTALL_DEEP" = true ]; then
     section "執行深度清理"
-    rm -rf "$HOME/.local/share/nvim/lazy"
-    rm -rf "$HOME/.local/share/nvim/site/parser"
-    rm -rf "$HOME/.cache/nvim/luac"
-    rm -rf "$HOME/.local/share/nvim/mason"
-    rm -rf "$HOME/.local/state/nvim"
-    success "深度清理完成"
+    rm -rf "$HOME/.local/share/nvim" "$HOME/.cache/nvim" "$HOME/.local/state/nvim"
+    success "清理完成"
 fi
 
-# ==================== Neovim 安裝 ====================
-section "安裝 Neovim (最新版)"
-
+# Neovim 安裝與版本校驗
+section "檢查 Neovim 版本"
 install_neovim() {
     local ARCH=$(uname -m)
+    local NEEDS_UPDATE=false
+    
     if command -v nvim >/dev/null 2>&1; then
-        local current_version=$(nvim --version | head -n1 | awk '{print $2}')
-        # 提取主版本號與次版本號 (例如 v0.7.2 -> 0 7)
-        local major=$(echo $current_version | sed 's/v//' | cut -d. -f1)
-        local minor=$(echo $current_version | sed 's/v//' | cut -d. -f2)
+        # 強健的版本提取邏輯：只拿數字 (例如 NVIM v0.7.2 -> 0.7.2)
+        local ver_str=$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+        local major=$(echo $ver_str | cut -d. -f1)
+        local minor=$(echo $ver_str | cut -d. -f2)
         
-        info "檢測到 Neovim: $current_version ($ARCH)"
+        info "檢測到現有版本: $ver_str ($ARCH)"
         
-        # 判斷版本是否低於 0.10 (即 major=0 且 minor < 10)
         if [ "$major" -eq 0 ] && [ "$minor" -lt 10 ]; then
-            warning "版本太舊 ($current_version)，正在自動更新到最新版以相容配置..."
+            warning "版本太舊 ($ver_str)，必須更新到 0.10.0+ 才能執行現代配置。"
+            NEEDS_UPDATE=true
         elif [ "$INSTALL_MINIMAL" = true ]; then
-            info "極簡模式：現有版本 ($current_version) 已足夠，跳過安裝"
+            info "極簡模式：版本足夠，跳過安裝"
             return
         else
-            read -p "是否重新安裝/更新到最新版本? [y/N]: " reinstall
-            if [[ ! $reinstall =~ ^[Yy]$ ]]; then
-                info "跳過 Neovim 安裝"
-                return
+            NEEDS_UPDATE=false
+        fi
+    else
+        info "未檢測到 Neovim，準備開始安裝..."
+        NEEDS_UPDATE=true
+    fi
+
+    if [ "$NEEDS_UPDATE" = true ]; then
+        if [ "$OS" = "macos" ]; then
+            brew install neovim
+        else
+            # 針對 Linux (x86_64 或 ARM64)
+            if [ "$ARCH" = "x86_64" ]; then
+                info "下載 Neovim x86_64 AppImage..."
+                wget -q --show-progress -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
+                chmod +x /tmp/nvim.appimage
+                $SUDO mv /tmp/nvim.appimage /usr/local/bin/nvim
+            elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+                info "檢測到 ARM64 架構，下載預編譯包..."
+                wget -q --show-progress -O /tmp/nvim-linux-arm64.tar.gz https://github.com/neovim/neovim/releases/latest/download/nvim-linux-arm64.tar.gz
+                cd /tmp && tar -xzf nvim-linux-arm64.tar.gz
+                $SUDO cp -rf nvim-linux-arm64/bin/* /usr/local/bin/
+                $SUDO cp -rf nvim-linux-arm64/lib/* /usr/local/lib/
+                $SUDO cp -rf nvim-linux-arm64/share/* /usr/local/share/
+                rm -rf nvim-linux-arm64 nvim-linux-arm64.tar.gz
+                cd - > /dev/null
             fi
         fi
+        success "Neovim 更新完成！"
     fi
-    
-    if [ "$OS" = "macos" ]; then
-        brew install neovim
-    else
-        if [ "$ARCH" = "x86_64" ]; then
-            info "下載 Neovim x86_64 AppImage..."
-            wget -q --show-progress -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
-            chmod +x /tmp/nvim.appimage
-            $SUDO mv /tmp/nvim.appimage /usr/local/bin/nvim
-        elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-            info "檢測到 ARM64 架構 (Orange Pi/Raspberry Pi)..."
-            info "下載 Neovim ARM64 預編譯包..."
-            wget -q --show-progress -O /tmp/nvim-linux-arm64.tar.gz https://github.com/neovim/neovim/releases/latest/download/nvim-linux-arm64.tar.gz
-            cd /tmp
-            tar -xzf nvim-linux-arm64.tar.gz
-            $SUDO cp -rf nvim-linux-arm64/bin/* /usr/local/bin/
-            $SUDO cp -rf nvim-linux-arm64/lib/* /usr/local/lib/
-            $SUDO cp -rf nvim-linux-arm64/share/* /usr/local/share/
-            rm -rf nvim-linux-arm64 nvim-linux-arm64.tar.gz
-            cd - > /dev/null
-        else
-            error "不支援的架構: $ARCH"; exit 1
-        fi
-    fi
-    success "Neovim 安裝完成: $(nvim --version | head -n1)"
 }
-
 install_neovim
 
-# ==================== 基礎工具安裝 ====================
+# 基礎工具安裝
 section "安裝基礎工具"
+$SUDO apt update
+if [ "$INSTALL_MINIMAL" = true ]; then
+    $SUDO apt install -y git curl wget fd-find ripgrep
+else
+    $SUDO apt install -y git curl wget fd-find python3-pynvim ripgrep
+fi
+[ -x "$(command -v fdfind)" ] && mkdir -p "$HOME/.local/bin" && ln -sf "$(which fdfind)" "$HOME/.local/bin/fd"
 
-install_base_tools() {
-    if [ "$OS" = "macos" ]; then
-        brew install git curl wget fd lazygit ripgrep
-    else
-        $SUDO apt update
-        if [ "$INSTALL_MINIMAL" = true ]; then
-            $SUDO apt install -y git curl wget fd-find ripgrep
-        else
-            $SUDO apt install -y git curl wget fd-find python3-pynvim ripgrep
-        fi
-        
-        if command -v fdfind >/dev/null 2>&1; then
-            mkdir -p "$HOME/.local/bin"
-            ln -sf "$(which fdfind)" "$HOME/.local/bin/fd"
-        fi
-        
-        if [ "$INSTALL_MINIMAL" = false ] && ! command -v lazygit >/dev/null 2>&1; then
-            info "安裝 lazygit..."
-            local LG_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-            local LG_ARCH="x86_64"
-            [ "$(uname -m)" = "aarch64" ] && LG_ARCH="arm64"
-            curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LG_VERSION}_Linux_${LG_ARCH}.tar.gz"
-            tar xf lazygit.tar.gz lazygit && $SUDO install lazygit /usr/local/bin && rm lazygit.tar.gz lazygit
-        fi
-    fi
-    success "基礎工具安裝完成"
-}
-
-install_base_tools
-
-# ==================== 配置符號連結 ====================
+# 配置符號連結
 section "配置 Neovim"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NVIM_CONFIG="$SCRIPT_DIR/nvim"
+mkdir -p "$HOME/.config"
 
 if [ "$INSTALL_MINIMAL" = true ]; then
-    info "極簡模式：套用 init.minimal.lua"
-    [ -f "$NVIM_CONFIG/init.lua" ] && ! grep -q "Minimal Mode" "$NVIM_CONFIG/init.lua" && mv "$NVIM_CONFIG/init.lua" "$NVIM_CONFIG/init.lua.full.backup"
+    info "套用極簡配置 (Minimal Mode)..."
     cp "$NVIM_CONFIG/init.minimal.lua" "$NVIM_CONFIG/init.lua"
-else
-    [ -f "$NVIM_CONFIG/init.lua.full.backup" ] && mv "$NVIM_CONFIG/init.lua.full.backup" "$NVIM_CONFIG/init.lua"
 fi
-
-mkdir -p "$HOME/.config"
 ln -sf "$NVIM_CONFIG" "$HOME/.config/nvim"
-success "配置完成: ~/.config/nvim -> $NVIM_CONFIG"
 
-# ==================== 預防性修復 ====================
-section "預防性修復"
+# 最後修復
 git config --global core.autocrlf false
 git config --global core.fileMode false
 rm -f "$HOME/.config/nvim/lazy-lock.json"
-success "修復完成"
 
-echo -e "\n${GREEN}🎉 Neovim 安裝完成！${NC}"
+success "🎉 Neovim 安裝與配置完成！"
