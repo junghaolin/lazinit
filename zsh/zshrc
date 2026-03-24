@@ -179,3 +179,10 @@ fi
 export PATH
 
 # 提示：首次修改後運行 'zcompile ~/.zshrc' 來編譯配置加速載入
+
+# opencode
+export PATH=/home/zeph/.opencode/bin:$PATH
+
+
+alias jo="ssh jo"
+alias ju="ssh ju"
