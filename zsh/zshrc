@@ -1,4 +1,5 @@
 export TERM=xterm-256color
+fastfetch
 
 # ============= 工具函數 =============
 find_dir() {
@@ -12,177 +13,140 @@ find_dir() {
 }
 
 # ============= Instant Prompt =============
-# Enable Powerlevel10k instant prompt
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
 # ============= Zinit 插件管理器 =============
-# 安裝 zinit（如果不存在）
 if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
-    print -P "%F{33} %F{220}Installing %F{33}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager (%F{33}zdharma-continuum/zinit%F{220})…%f"
+    print -P "%F{33} %F{220}Installing Zinit…%f"
     command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"
-    command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" && \
-        print -P "%F{33} %F{34}Installation successful.%f%b" || \
-        print -P "%F{160} The clone has failed.%f%b"
+    command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git"
 fi
 
 source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
-# ============= OMZ 模組 =============
-zinit snippet OMZ::plugins/sudo/sudo.plugin.zsh          # double esc to add/remove sudo
-zinit snippet OMZ::lib/completion.zsh                     # tab 補選時列出清單
-zinit snippet OMZ::lib/key-bindings.zsh                   # 歷史瀏覽時保留已輸入內容
-
-# ============= Powerlevel10k =============
+# ============= 核心模組 (同步載入) =============
 zinit ice depth=1; zinit light romkatv/powerlevel10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# ============= Zinit 附加模組 =============
-zinit light-mode for \
+zinit snippet OMZ::lib/key-bindings.zsh
+zinit snippet OMZ::lib/completion.zsh
+
+# ============= 附加功能 (Turbo Mode) =============
+zinit wait'0' lucid for \
+    OMZ::plugins/sudo/sudo.plugin.zsh \
     zdharma-continuum/zinit-annex-as-monitor \
     zdharma-continuum/zinit-annex-bin-gem-node \
-    zdharma-continuum/zinit-annex-patch-dl \
-    zdharma-continuum/zinit-annex-rust
-
-# 語法高亮、補全、自動建議（延遲載入）
-zinit wait lucid for \
- atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
     zdharma-continuum/fast-syntax-highlighting \
- blockf \
-    zsh-users/zsh-completions \
- atload"!_zsh_autosuggest_start" \
-    zsh-users/zsh-autosuggestions
+    blockf zsh-users/zsh-completions \
+    atload"!_zsh_autosuggest_start" zsh-users/zsh-autosuggestions
+
+# ============= Zsh 選項設定 =============
+setopt AUTO_CD                   # 直接輸入目錄名
+setopt AUTO_PUSHD                # cd 自動紀錄歷史
+setopt PUSHD_IGNORE_DUPS         # 不重複紀錄路徑
+setopt CORRECT                   # 命令糾錯
+setopt INTERACTIVE_COMMENTS      # 交互模式支持註釋
+unsetopt BEEP                    # 靜音
 
 # ============= History 設定 =============
 HISTFILE="$HOME/.zsh_history"
-HISTSIZE=200000  # 支援約 2 年的命令記錄（每天 ~300 條）
-SAVEHIST=200000
-setopt BANG_HIST                 # Treat the '!' character specially during expansion.
-setopt EXTENDED_HISTORY          # Write the history file in the ":start:elapsed;command" format.
-setopt INC_APPEND_HISTORY        # Write to the history file immediately, not when the shell exits.
-setopt SHARE_HISTORY             # Share history between all sessions.
-setopt HIST_EXPIRE_DUPS_FIRST    # Expire duplicate entries first when trimming history.
-setopt HIST_IGNORE_DUPS          # Don't record an entry that was just recorded again.
-setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
-setopt HIST_FIND_NO_DUPS         # Do not display a line previously found.
-setopt HIST_IGNORE_SPACE         # Don't record an entry starting with a space.
-setopt HIST_SAVE_NO_DUPS         # Don't write duplicate entries in the history file.
-setopt HIST_REDUCE_BLANKS        # Remove superfluous blanks before recording entry.
-setopt HIST_VERIFY               # Don't execute immediately upon history expansion.
-setopt HIST_BEEP                 # Beep when accessing nonexistent history.
+HISTSIZE=100000
+SAVEHIST=100000
+setopt EXTENDED_HISTORY          # 紀錄時間
+setopt INC_APPEND_HISTORY        # 立即寫入
+setopt SHARE_HISTORY             # 跨 Session 共享
+setopt HIST_IGNORE_ALL_DUPS      # 忽略重複
+setopt HIST_REDUCE_BLANKS        # 移除空格
+setopt HIST_IGNORE_SPACE         # 忽略空格開頭的命令
+setopt HIST_SAVE_NO_DUPS         # 寫入檔案時不重複
 
-# ============= Lazy Loading =============
+# ============= 補全美化 (精煉版) =============
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' menu select
+zstyle ':completion:*:*:*:*:descriptions' format '%F{green}-- %d --%f'
+zstyle ':completion:*:messages' format ' %F{purple} -- %d --%f'
+zstyle ':completion:*:warnings' format ' %F{red}No matches for:%f %d'
+zstyle ':completion:*:*:*:*:corrections' format '%F{yellow}!- %d (errors: %e) -!%f'
+zstyle ':completion:*:*:-command-:*:' group-name ''
+
+# ============= Lazy Loading Scripts =============
 if [[ -o interactive ]]; then
-  source ~/.zsh/lazy_ls_v2.zsh
-  source ~/.zsh/lazy_vi_v2.zsh
-  source ~/.zsh/lazy_grc_v2.zsh
-  source ~/.zsh/lazy_grep_v2.zsh
-  source ~/.zsh/lazy_cat_v2.zsh
+  # 載入 v2 系列懶載入腳本
+  for f in ls vi grc grep cat; do
+    [ -f ~/.zsh/lazy_${f}_v2.zsh ] && source ~/.zsh/lazy_${f}_v2.zsh
+  done
 fi
 
-# ============= PATH 配置 =============
-# 使用 typeset -U 確保 PATH 中沒有重複項目
+# ============= PATH 極致整合 =============
 typeset -U path
+# 尋找工具路徑
+GO_DIR=$(find_dir "$HOME/go" "$HOME/.local/opt/go" "/usr/local/go")
+CONDA_BASE=$(find_dir "/opt/miniconda3" "$HOME/miniconda3" "$HOME/.miniconda3")
 
-# 基礎路徑
 path=(
   $HOME/lazinit/utils
   $HOME/.local/bin
+  $HOME/.opencode/bin
   $HOME/flutter/bin
-  /opt/idea-IU-231.8770.65/bin
-  /opt/lua-language-server
-  $HOME/.docker/cli-plugins
+  $HOME/.lmstudio/bin
+  $([ -n "$GO_DIR" ] && echo "$GO_DIR/bin")
+  $([ -d "/usr/local/go/bin" ] && echo "/usr/local/go/bin")
   $path
 )
+[ -n "$GO_DIR" ] && export GO_PATH="$GO_DIR"
 
-# Go 路徑
-GO_PATH=$(find_dir "$HOME/go" "$HOME/.local/opt/go" "$HOME/.go" "/opt/go")
-if [ -n "$GO_PATH" ]; then
-  path=($GO_PATH/bin $path)
-  export GO_PATH
-fi
-
-# 添加 /usr/local/go/bin 如果存在
-if [ -d "/usr/local/go/bin" ]; then
-  path=(/usr/local/go/bin $path)
-fi
-
-# ============= Conda 初始化 =============
-# 使用 find_dir 尋找 conda 安裝路徑
-CONDA_PATH=$(find_dir "/opt/miniconda3" "$HOME/miniconda3" "$HOME/.local/opt/miniconda3" "$HOME/.miniconda3")
-
-if [ -n "$CONDA_PATH" ]; then
-  __conda_setup="$('$CONDA_PATH/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-  if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-  else
-    if [ -f "$CONDA_PATH/etc/profile.d/conda.sh" ]; then
-      . "$CONDA_PATH/etc/profile.d/conda.sh"
+# ============= Conda 懶載入 (精確版) =============
+_load_conda() {
+  if [ -n "$CONDA_BASE" ]; then
+    if [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
+      . "$CONDA_BASE/etc/profile.d/conda.sh"
     else
-      path=($CONDA_PATH/bin $path)
+      path=($CONDA_BASE/bin $path)
     fi
   fi
-  unset __conda_setup
-fi
+  unfunction conda python python3 pip pip3 2>/dev/null
+}
+conda python python3 pip pip3() { _load_conda; "$0" "$@"; }
 
-# ============= 其他環境變數 =============
-export LC_CTYPE=en_US.UTF-8
+# ============= NVM 懶載入 (精確版) =============
+_load_nvm() {
+  export NVM_DIR=$(find_dir "/usr/local/opt/nvm" "$HOME/.nvm")
+  if [ -n "$NVM_DIR" ]; then
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+  fi
+  unfunction nvm node npm yarn npx pnpm corepack 2>/dev/null
+}
+nvm node npm yarn npx pnpm corepack() { _load_nvm; "$0" "$@"; }
+
+# ============= 其他設定 =============
 export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
 export FZF_DEFAULT_COMMAND='fd --type f --follow --exclude .git'
 export HSA_OVERRIDE_GFX_VERSION=11.0.0
 
-# ============= Aliases =============
+# Aliases
 alias dive="docker run -ti --rm -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive"
 alias dfimage="docker run -v /var/run/docker.sock:/var/run/docker.sock --rm alpine/dfimage"
-alias dut="ssh -t dut"
-alias qdbus="qdbus-qt5"
-alias luamake="$HOME/lazinit/neovim/lua-language-server/3rd/luamake/luamake"
 alias fzf='fzf --ansi'
+alias jo="ssh jo" ju="ssh ju" dut="ssh -t dut"
 
-# ============= Key Bindings =============
-# Ctrl+K/J 來瀏覽歷史
+# Bindings
 bindkey '^K' history-search-backward
 bindkey '^J' history-search-forward
 
-# ============= NVM =============
-export NVM_DIR=$(find_dir "/usr/local/opt/nvm" "$HOME/.nvm")
-if [ -n "$NVM_DIR" ]; then
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-fi
-
-# ============= Tilix/VTE =============
+# Tilix/VTE
 if [ -n "$TILIX_ID" ] || [ -n "$VTE_VERSION" ]; then
-  if [ -f /etc/profile.d/vte-2.91.sh ]; then
-    source /etc/profile.d/vte-2.91.sh
-  fi
+  [ -f /etc/profile.d/vte-2.91.sh ] && source /etc/profile.d/vte-2.91.sh
 fi
 
-# ============= LM Studio =============
-if [ -d "$HOME/.lmstudio/bin" ]; then
-  path=($HOME/.lmstudio/bin $path)
-fi
-
-# ============= ASDF =============
-if [ -f "$HOME/.asdf/asdf.sh" ]; then
-  . "$HOME/.asdf/asdf.sh"
-fi
-
-# ============= 個人化設定 =============
-# 在 ~/.zshrc.local 中添加機器特定的配置
+# asdf & local config
+[ -f "$HOME/.asdf/asdf.sh" ] && . "$HOME/.asdf/asdf.sh"
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
-# 匯出最終 PATH
 export PATH
-
-# 提示：首次修改後運行 'zcompile ~/.zshrc' 來編譯配置加速載入
-
-# opencode
-export PATH=/home/zeph/.opencode/bin:$PATH
-
-
-alias jo="ssh jo"
-alias ju="ssh ju"

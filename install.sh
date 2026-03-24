@@ -40,18 +40,18 @@ Lazinit 模块化安装工具
 
 独立使用:
   # 只安装 Neovim
-  cd neovim && ./install.v2.sh
+  cd neovim && ./install.sh
   
   # 只配置 ZSH
   cd zsh && ./install.sh
 EOF
 }
 
-# 解析参数并转发给 init_env.v2.sh
+# 解析参数并转发给 init_env.sh
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     show_help
     exit 0
 fi
 
 # 转发所有参数给主脚本
-"$SCRIPT_DIR/init_env.v2.sh" "$@"
+"$SCRIPT_DIR/init_env.sh" "$@"
