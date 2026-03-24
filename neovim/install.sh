@@ -75,13 +75,17 @@ install_neovim() {
     local ARCH=$(uname -m)
     if command -v nvim >/dev/null 2>&1; then
         local current_version=$(nvim --version | head -n1 | awk '{print $2}')
+        # 提取主版本號與次版本號 (例如 v0.7.2 -> 0 7)
+        local major=$(echo $current_version | sed 's/v//' | cut -d. -f1)
+        local minor=$(echo $current_version | sed 's/v//' | cut -d. -f2)
+        
         info "檢測到 Neovim: $current_version ($ARCH)"
         
-        # 如果版本太舊 (< v0.10)，強制安裝/更新
-        if [[ "$current_version" < "v0.10" ]]; then
-            warning "版本太舊 ($current_version)，需要更新到 0.10+ 以上版本。"
+        # 判斷版本是否低於 0.10 (即 major=0 且 minor < 10)
+        if [ "$major" -eq 0 ] && [ "$minor" -lt 10 ]; then
+            warning "版本太舊 ($current_version)，正在自動更新到最新版以相容配置..."
         elif [ "$INSTALL_MINIMAL" = true ]; then
-            info "極簡模式：現有版本已足夠，跳過安裝"
+            info "極簡模式：現有版本 ($current_version) 已足夠，跳過安裝"
             return
         else
             read -p "是否重新安裝/更新到最新版本? [y/N]: " reinstall
