@@ -20,6 +20,7 @@ INSTALL_NEOVIM=false
 INSTALL_DOCKER=false
 INSTALL_GENERAL=false
 INSTALL_TMUX=false
+INSTALL_GIT=false
 
 # 環境變量
 OS=""
@@ -69,6 +70,9 @@ parse_args() {
                 ;;
             --tmux)
                 INSTALL_TMUX=true
+                ;;
+            --git)
+                INSTALL_GIT=true
                 ;;
             --docker)
                 INSTALL_DOCKER=true
@@ -437,6 +441,24 @@ install_tmux() {
     echo ""
 }
 
+# ==================== 安裝 Git ====================
+install_git() {
+    section "安裝 Git 配置"
+    
+    local GIT_INSTALLER="$SCRIPT_DIR/git/install.sh"
+    
+    if [ ! -x "$GIT_INSTALLER" ]; then
+        error "找不到 Git 安裝腳本: $GIT_INSTALLER"
+        info "請檢查文件是否存在並有執行權限"
+        return 1
+    fi
+    
+    info "運行 Git 安裝腳本..."
+    "$GIT_INSTALLER"
+    
+    echo ""
+}
+
 # ==================== 安裝 Docker ====================
 install_docker() {
     section "安裝 Docker"
@@ -464,8 +486,9 @@ interactive_menu() {
     echo "  2) 通用軟件包 (eza, bat, ripgrep, 等)"
     echo "  3) Neovim + LSP 環境"
     echo "  4) Tmux 配置"
-    echo "  5) Docker"
-    echo "  6) 全部安裝"
+    echo "  5) Git 配置"
+    echo "  6) Docker"
+    echo "  7) 全部安裝"
     echo "  0) 退出"
     echo ""
     
@@ -477,12 +500,14 @@ interactive_menu() {
             2) INSTALL_GENERAL=true ;;
             3) INSTALL_NEOVIM=true ;;
             4) INSTALL_TMUX=true ;;
-            5) INSTALL_DOCKER=true ;;
-            6)
+            5) INSTALL_GIT=true ;;
+            6) INSTALL_DOCKER=true ;;
+            7)
                 INSTALL_ZSH=true
                 INSTALL_GENERAL=true
                 INSTALL_NEOVIM=true
                 INSTALL_TMUX=true
+                INSTALL_GIT=true
                 INSTALL_DOCKER=true
                 ;;
             0) exit 0 ;;
@@ -530,6 +555,10 @@ main() {
     
     if [ "$INSTALL_TMUX" = true ]; then
         install_tmux
+    fi
+    
+    if [ "$INSTALL_GIT" = true ]; then
+        install_git
     fi
     
     if [ "$INSTALL_DOCKER" = true ]; then

@@ -1,0 +1,56 @@
+[core]
+    # 使用我們辛苦配置的 Neovim 作為預設編輯器
+    editor = nvim
+    
+    # 解決 Windows/Linux 換行符號問題 (非常重要)
+    autocrlf = false
+    
+    # 忽略檔案權限的變更 (避免 chmod 導致的假修改)
+    filemode = false
+    
+    # 全域忽略清單
+    excludesfile = ~/.gitignore_global
+
+[alias]
+    # 狀態與分支
+    st = status -sb
+    br = branch
+    co = checkout
+    sw = switch
+    
+    # 提交與復原
+    cm = commit -m
+    amend = commit --amend --no-edit
+    unstage = reset HEAD --
+    discard = checkout --
+    
+    # 神級歷史線 (圖形化、帶顏色、顯示分支)
+    lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    lga = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all
+
+[color]
+    # 開啟所有命令的顏色輸出
+    ui = auto
+
+[pull]
+    # 預設使用 rebase，保持歷史線筆直乾淨，避免產生無謂的 Merge 節點
+    rebase = true
+
+[push]
+    # 第一次 push 新分支時，自動設定 tracking (不需要再打 --set-upstream origin xxx)
+    autoSetupRemote = true
+    
+    # 只 push 當前分支，避免不小心把其他分支推上去
+    default = simple
+
+[fetch]
+    # 自動清理遠端已經刪除的分支
+    prune = true
+
+[init]
+    # 新專案預設使用 main 作為主分支 (取代傳統的 master)
+    defaultBranch = main
+
+[merge]
+    # 衝突時顯示共同祖先的代碼，這對解衝突非常有幫助
+    conflictstyle = diff3
