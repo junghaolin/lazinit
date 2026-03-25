@@ -1,5 +1,5 @@
 #!/bin/bash
-# 命令列神器小抄 (CLI Mastery Cheat Sheet)
+# 命令列神器小抄 (CLI Mastery Cheat Sheet) - 傳承與進化版
 
 BLUE='\033[1;34m'
 GREEN='\033[1;32m'
@@ -8,42 +8,46 @@ CYAN='\033[1;36m'
 MAGENTA='\033[1;35m'
 NC='\033[0m'
 
-echo -e "${CYAN}======================================================${NC}"
-echo -e "${CYAN}        🔥 命令列神器小抄 (CLI Mastery Cheat Sheet)      ${NC}"
-echo -e "${CYAN}======================================================${NC}\n"
+echo -e "${CYAN}========================================================================${NC}"
+echo -e "${CYAN}             🔥 命令列神器小抄 (CLI Mastery Cheat Sheet)                  ${NC}"
+echo -e "${CYAN}========================================================================${NC}\n"
 
-echo -e "${BLUE}▶ fzf (Fuzzy Finder - 模糊搜尋終結者)${NC}"
+echo -e "${BLUE}▶ 找檔案：古典 find vs. 現代 fd${NC}"
+echo -e "  [找檔名]  古典: ${YELLOW}find . -name \"*keyword*\"${NC}"
+echo -e "            現代: ${GREEN}fd \"keyword\"${NC}"
+echo -e "  [找副檔]  古典: ${YELLOW}find . -name \"*.md\"${NC}"
+echo -e "            現代: ${GREEN}fd -e md${NC}"
+echo -e "  [找隱藏]  古典: ${YELLOW}find . -name \".git\"${NC} (find 預設會搜隱藏檔)"
+echo -e "            現代: ${GREEN}fd -H \"^\\.git\"${NC} (fd 預設忽略隱藏與 gitignore，需加 -H)\n"
+
+echo -e "${BLUE}▶ 找字串：古典 grep vs. 現代 rg (ripgrep)${NC}"
+echo -e "  [遞迴搜]  古典: ${YELLOW}grep -rn \"keyword\" .${NC} (r: 遞迴, n: 行號)"
+echo -e "            現代: ${GREEN}rg \"keyword\"${NC} (預設即為遞迴並附帶彩色行號)"
+echo -e "  [不分大]  古典: ${YELLOW}grep -rni \"keyword\" .${NC}"
+echo -e "            現代: ${GREEN}rg -i \"keyword\"${NC} (-i: ignore case)"
+echo -e "  [看上下]  古典: ${YELLOW}grep -rn -C 3 \"error\" .${NC}"
+echo -e "            現代: ${GREEN}rg -C 3 \"error\"${NC} (顯示上下各 3 行的 Context)"
+echo -e "  [限類型]  古典: ${YELLOW}find . -name \"*.py\" -exec grep -Hn \"func\" {} +${NC}"
+echo -e "            現代: ${GREEN}rg \"func\" -t py${NC}\n"
+
+echo -e "${BLUE}▶ 模糊搜尋終結者：fzf (現代專屬)${NC}"
 echo -e "  ${YELLOW}Ctrl + r${NC}               在終端機搜尋歷史指令 (超快！)"
 echo -e "  ${YELLOW}Ctrl + t${NC}               搜尋當前目錄下的檔案，並把路徑貼到命令列"
 echo -e "  ${GREEN}vim \$(fzf)${NC}              互動式搜尋檔案並用 vim 打開"
-echo -e "  ${GREEN}ls | fzf${NC}               將任何指令的輸出導給 fzf 進行即時過濾\n"
+echo -e "  ${GREEN}cat file | fzf${NC}         將任何指令的長篇輸出，導給 fzf 進行即時過濾\n"
 
-echo -e "${BLUE}▶ ripgrep (rg) - 宇宙最快搜尋字串工具${NC}"
-echo -e "  取代傳統 grep，預設忽略 .gitignore 的檔案，速度極快。"
-echo -e "  ${GREEN}rg \"關鍵字\"${NC}            在當前目錄下搜尋包含關鍵字的檔案"
-echo -e "  ${GREEN}rg -i \"keyword\"${NC}        忽略大小寫搜尋"
-echo -e "  ${GREEN}rg -w \"keyword\"${NC}        完全精確比對單字 (Whole word)"
-echo -e "  ${GREEN}rg -C 3 \"error\"${NC}        搜尋 \"error\" 並顯示上下各 3 行的 Context"
-echo -e "  ${GREEN}rg \"func\" -t py${NC}        只在 Python 檔案 (.py) 中搜尋\n"
+echo -e "${BLUE}▶ 流編輯與字串替換：sed (古典必修)${NC}"
+echo -e "  ${YELLOW}sed 's/舊/新/g' file${NC}   將檔案中的「舊」替換為「新」(只輸出螢幕不改檔)"
+echo -e "  ${GREEN}sed -i 's/舊/新/g' file${NC} 直接修改檔案內容 (-i: in-place，危險操作請小心)"
+echo -e "  ${YELLOW}sed -n '5,10p' file${NC}    只印出檔案的第 5 到第 10 行"
+echo -e "  ${YELLOW}sed '/^$/d' file${NC}       刪除所有的空白行\n"
 
-echo -e "${BLUE}▶ fd (fd-find) - 更好用的 find 替代品${NC}"
-echo -e "  取代傳統 find，語法更簡單，預設忽略 .gitignore。"
-echo -e "  ${GREEN}fd \"keyword\"${NC}           搜尋檔名包含 keyword 的檔案"
-echo -e "  ${GREEN}fd -e md${NC}               找出所有 .md 結尾的副檔名"
-echo -e "  ${GREEN}fd -H \"^\\.git\"${NC}          搜尋隱藏檔案 (-H: 包含 hidden)\n"
-
-echo -e "${BLUE}▶ sed (Stream Editor - 字串替換與流編輯)${NC}"
-echo -e "  ${GREEN}sed 's/舊/新/g' file${NC}   將檔案中的「舊」替換為「新」(只輸出螢幕不改檔)"
-echo -e "  ${GREEN}sed -i 's/舊/新/g' file${NC} 直接修改檔案內容 (-i: in-place)"
-echo -e "  ${GREEN}sed -n '5,10p' file${NC}    只印出檔案的第 5 到第 10 行"
-echo -e "  ${GREEN}sed '/^$/d' file${NC}       刪除所有的空白行\n"
-
-echo -e "${BLUE}▶ awk (文字處理與欄位擷取之王)${NC}"
+echo -e "${BLUE}▶ 欄位擷取與統計：awk (古典必修)${NC}"
 echo -e "  預設以「空白」或「Tab」作為分隔符號，將每行拆成 \$1, \$2... 等欄位。"
-echo -e "  ${GREEN}awk '{print \$1}' file${NC}   只印出檔案每一行的第 1 個欄位"
+echo -e "  ${YELLOW}awk '{print \$1}' file${NC}   只印出檔案每一行的第 1 個欄位"
 echo -e "  ${GREEN}ls -l | awk '{print \$9, \$5}'${NC} 印出檔名與檔案大小"
-echo -e "  ${GREEN}awk -F \":\" '{print \$1}' /etc/passwd${NC} 指定冒號 \":\" 為分隔符，印出系統所有使用者名稱"
-echo -e "  ${GREEN}awk '/error/ {print \$0}' file${NC}  類似 grep，找出有 error 的行並印出整行 (\$0)\n"
+echo -e "  ${YELLOW}awk -F \":\" '{print \$1}' /etc/passwd${NC} 指定冒號 \":\" 為分隔，印出系統所有使用者名稱"
+echo -e "  ${YELLOW}awk '/error/ {print \$0}' file${NC}  類似 grep，找出有 error 的行並印出整行 (\$0)\n"
 
 echo -e "${BLUE}▶ 其他實用神技${NC}"
 echo -e "  ${GREEN}bat <file>${NC} 或 ${GREEN}cat <file>${NC}  使用 batcat 語法高亮檢視檔案"
@@ -52,4 +56,4 @@ echo -e "  ${GREEN}sudo !!${NC}                忘了加 sudo 權限不足？打
 echo -e "  ${GREEN}ctrl + a${NC} / ${GREEN}ctrl + e${NC}    游標跳到命令列的 最前面 / 最後面"
 echo -e "  ${GREEN}ctrl + u${NC} / ${GREEN}ctrl + k${NC}    刪除游標 前面 / 後面 的所有字\n"
 
-echo -e "${CYAN}======================================================${NC}"
+echo -e "${CYAN}========================================================================${NC}"
