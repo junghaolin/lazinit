@@ -1,0 +1,54 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# Lazinit 系統化 Bash 配置 (取代系統預設)
+
+# 如果不是互動模式，直接退出 (非常重要的防護)
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# ==========================
+# 1. 系統基礎設定 (System Defaults)
+# ==========================
+# 避免在歷史紀錄中存入重複的指令或以空白開頭的指令
+HISTCONTROL=ignoreboth
+
+# 歷史紀錄採用「附加」模式，而非覆寫，避免多視窗時紀錄遺失
+shopt -s histappend
+
+# 加大歷史紀錄保存量
+HISTSIZE=100000
+HISTFILESIZE=100000
+
+# 每次指令執行後檢查視窗大小，避免排版錯亂
+shopt -s checkwinsize
+
+# 啟用 Bash 原生的強大自動補全功能 (例如 git, ssh 參數補全)
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# ==========================
+# 2. Lazinit 強化配置 (Lazinit Enhancements)
+# ==========================
+# 載入我們的雙行 Prompt、Alias、FZF 等進階功能
+if [ -f "$HOME/lazinit/bash/bashrc_extra" ]; then
+    . "$HOME/lazinit/bash/bashrc_extra"
+fi
+
+# ==========================
+# 3. 個人化設定 (Local Config)
+# ==========================
+# 讀取不進入 Git 版控的本地機器設定 (例如特定的環境變數或密碼)
+if [ -f "$HOME/.bashrc.local" ]; then
+    . "$HOME/.bashrc.local"
+fi
+
+# 讀取常見的 bash_aliases 慣例檔案
+if [ -f "$HOME/.bash_aliases" ]; then
+    . "$HOME/.bash_aliases"
+fi

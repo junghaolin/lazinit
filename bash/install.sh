@@ -13,24 +13,17 @@ success() { echo -e "${GREEN}✓${NC} $1"; }
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# 徹底重整 ~/.bashrc (保證置頂)
-info "正在重整 ~/.bashrc 確保配置生效..."
+# 系統化重整 ~/.bashrc (採用軟連結取代不穩定的注入)
+info "正在備份並建立 ~/.bashrc 軟連結..."
 
-# 移除舊的注入，避免重複 (包含之前的 ble.sh 痕跡)
-sed -i '/Lazinit Bash/d' ~/.bashrc
-sed -i '/bashrc_extra/d' ~/.bashrc
-sed -i '/====================================/d' ~/.bashrc
+if [ -f "$HOME/.bashrc" ] && [ ! -L "$HOME/.bashrc" ]; then
+    BACKUP="$HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"
+    info "備份現有的 ~/.bashrc 到 $BACKUP"
+    mv "$HOME/.bashrc" "$BACKUP"
+fi
 
-# 建立新檔案，先串接原有的 .bashrc，再把我們的配置放在最底部 (以覆蓋系統預設的 PS1 與 alias)
-TEMP_RC=$(mktemp)
-cat ~/.bashrc > "$TEMP_RC"
-echo "" >> "$TEMP_RC"
-echo "# === Lazinit Bash 強化配置 ===" >> "$TEMP_RC"
-echo "[ -f $SCRIPT_DIR/bashrc_extra ] && . $SCRIPT_DIR/bashrc_extra" >> "$TEMP_RC"
-echo "# ======================================================" >> "$TEMP_RC"
-
-# 覆蓋原檔
-mv "$TEMP_RC" ~/.bashrc
+ln -sf "$SCRIPT_DIR/bashrc" "$HOME/.bashrc"
 
 success "Bash 強化環境安裝完成！"
+echo "  ~/.bashrc -> $SCRIPT_DIR/bashrc"
 echo "請務必執行指令: exec bash"
