@@ -2,11 +2,15 @@
 # 適用於：不方便裝 Zsh 的極簡開發環境
 
 # ==========================
-# 0. 載入 ble.sh (如果存在)
+# 0. 啟動 ble.sh (核心：灰色補全與高亮)
 # ==========================
-# 這必須在任何別名 (alias) 或 Prompt 設定之前
 if [[ $- == *i* ]] && [ -f ~/.local/share/blesh/ble.sh ]; then
-  source ~/.local/share/blesh/ble.sh --no-attach
+  # 採用官方推薦的最強掛載模式
+  source ~/.local/share/blesh/ble.sh --attach=prompt
+  
+  # ble.sh 配置：開啟自動建議
+  bleopt auto_complete=1
+  ble-face -s auto_complete 'fg=242' # 淡淡的灰色
 fi
 
 # ==========================
@@ -15,8 +19,6 @@ fi
 if [ -x /usr/bin/dircolors ]; then
     alias ls='ls --color=auto'
     alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='fgrep --color=auto'
 fi
 
 alias l='ls -CF'
@@ -44,6 +46,7 @@ COLOR_PATH="\[\033[01;34m\]"
 COLOR_GIT="\[\033[01;33m\]"
 COLOR_RESET="\[\033[00m\]"
 
+# 注意：如果 ble.sh 已啟動，它會接管 PS1
 export PS1="${COLOR_USER}\u${COLOR_RESET}@${COLOR_HOST}\h${COLOR_RESET}:${COLOR_PATH}\w${COLOR_GIT}\$(parse_git_branch)${COLOR_RESET}\n\$ "
 
 # ==========================
@@ -55,20 +58,7 @@ if [[ $- == *i* ]]; then
 fi
 
 # ==========================
-# 4. ble.sh 進階設定
-# ==========================
-if [[ ${BLE_VERSION-} ]]; then
-  # 開啟類似 Zsh-autosuggestions 的灰色自動預測功能
-  bleopt auto_complete=1
-  # 設定採納建議的按鍵 (右鍵或 End)
-  # ble-bind -m 'insert' [right] 'auto_complete/insert'
-  
-  # 設定高亮顏色 (可選)
-  ble-face -s auto_complete 'fg=242'
-fi
-
-# ==========================
-# 5. FZF 整合 (如果已安裝)
+# 4. FZF 整合
 # ==========================
 if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
   source /usr/share/doc/fzf/examples/key-bindings.bash
@@ -77,11 +67,6 @@ elif [ -f ~/.fzf.bash ]; then
 fi
 
 # ==========================
-# 6. 路徑優化
+# 5. 路徑優化
 # ==========================
 export PATH="$HOME/.local/bin:$HOME/lazinit/utils:$PATH"
-
-# 啟動 ble.sh
-if [[ ${BLE_VERSION-} ]]; then
-  ble-attach
-fi
