@@ -130,6 +130,9 @@ export LANG=en_US.UTF-8
 export FZF_DEFAULT_COMMAND='fd --type f --follow --exclude .git'
 export HSA_OVERRIDE_GFX_VERSION=11.0.0
 
+# 解決 less 吞掉顏色的問題，並開啟詳細狀態列與忽略大小寫搜尋
+export LESS="-R -i -M -x4"
+
 # Aliases
 alias dive="docker run -ti --rm -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive"
 alias dfimage="docker run -v /var/run/docker.sock:/var/run/docker.sock --rm alpine/dfimage"
