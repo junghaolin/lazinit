@@ -18,12 +18,14 @@ if command -v eza >/dev/null 2>&1; then
     alias ll='eza -lbGF'
     alias la='eza -laF'
     alias tree='eza --tree'
+    alias lll='eza -lbGF --color=always | less' # 專門用來分頁看長目錄，保證不掉色
 elif command -v exa >/dev/null 2>&1; then
     alias ls='exa -F'
     alias l='exa -lbF'
     alias ll='exa -lbGF'
     alias la='exa -laF'
     alias tree='exa --tree'
+    alias lll='exa -lbGF --color=always | less' # 專門用來分頁看長目錄，保證不掉色
 else
     if [ -x /usr/bin/dircolors ]; then
         alias ls='ls --color=auto'
@@ -31,6 +33,7 @@ else
     alias l='ls -CF'
     alias la='ls -A'
     alias ll='ls -alF'
+    alias lll='ls -alF --color=always | less'
 fi
 
 if [ -x /usr/bin/dircolors ]; then
