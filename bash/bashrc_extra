@@ -1,0 +1,58 @@
+# Lazinit Bash 強化配置
+# 適用於：不方便裝 Zsh 的極簡開發環境
+
+# ==========================
+# 1. 核心 Alias
+# ==========================
+# 自動偵測 ls 顏色
+if [ -x /usr/bin/dircolors ]; then
+    alias ls='ls --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='fgrep --color=auto'
+fi
+
+# 常用縮寫
+alias l='ls -CF'
+alias la='ls -A'
+alias ll='ls -alF'
+alias ..='cd ..'
+alias ...='cd ../..'
+
+# Git 常用縮寫 (與 zsh 版保持一致)
+alias gst='git status -sb'
+alias glg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+alias gco='git checkout'
+alias gcm='git commit -m'
+
+# ==========================
+# 2. 智慧型 Prompt (雙行 + Git 支援)
+# ==========================
+# 獲取 Git 分支名稱
+parse_git_branch() {
+    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+
+# 設置顏色
+COLOR_USER="\[\033[01;32m\]"
+COLOR_HOST="\[\033[01;32m\]"
+COLOR_PATH="\[\033[01;34m\]"
+COLOR_GIT="\[\033[01;33m\]"
+COLOR_RESET="\[\033[00m\]"
+
+# 組合 PS1 (第一行資訊，第二行輸入)
+export PS1="${COLOR_USER}\u${COLOR_RESET}@${COLOR_HOST}\h${COLOR_RESET}:${COLOR_PATH}\w${COLOR_GIT}\$(parse_git_branch)${COLOR_RESET}\n\$ "
+
+# ==========================
+# 3. FZF 整合 (如果已安裝)
+# ==========================
+if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+  source /usr/share/doc/fzf/examples/key-bindings.bash
+elif [ -f ~/.fzf.bash ]; then
+  source ~/.fzf.bash
+fi
+
+# ==========================
+# 4. 路徑優化 (加入 local/bin)
+# ==========================
+export PATH="$HOME/.local/bin:$HOME/lazinit/utils:$PATH"

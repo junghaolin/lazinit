@@ -14,6 +14,7 @@ INSTALL_GENERAL=false
 INSTALL_TMUX=false
 INSTALL_GIT=false
 INSTALL_MINIMAL=false
+INSTALL_BASH=false
 
 # 環境變量
 OS=""
@@ -51,23 +52,25 @@ parse_args() {
                 ;;
             --minimal)
                 INSTALL_MINIMAL=true
-                INSTALL_TMUX=true; INSTALL_NEOVIM=true; INSTALL_GIT=true; INSTALL_GENERAL=true
+                INSTALL_TMUX=true; INSTALL_NEOVIM=true; INSTALL_GIT=true; INSTALL_GENERAL=true; INSTALL_BASH=true
                 ;;
             --zsh) INSTALL_ZSH=true ;;
             --neovim) INSTALL_NEOVIM=true ;;
             --tmux) INSTALL_TMUX=true ;;
             --git) INSTALL_GIT=true ;;
+            --bash) INSTALL_BASH=true ;;
             --docker) INSTALL_DOCKER=true ;;
             --general) INSTALL_GENERAL=true ;;
             --help|-h)
                 echo "使用方式："
                 echo "  $0           # 互動模式"
                 echo "  $0 --all     # 安裝所有組件"
-                echo "  $0 --minimal # 極簡開發環境 (Tmux + Minimal Neovim)"
+                echo "  $0 --minimal # 極簡開發環境 (Tmux + Minimal Neovim + Enhanced Bash)"
                 echo "  $0 --zsh     # 只安裝 ZSH"
                 echo "  $0 --neovim  # 只安裝 Neovim"
                 echo "  $0 --tmux    # 只安裝 Tmux 配置"
                 echo "  $0 --git     # 只安裝 Git 配置"
+                echo "  $0 --bash    # 只安裝 Bash 強化"
                 echo "  $0 --docker  # 只安裝 Docker"
                 echo "  $0 --general # 只安裝通用軟件包"
                 exit 0 ;;
@@ -120,6 +123,13 @@ detect_environment() {
 # ==================== 安裝 ZSH ====================
 install_zsh() {
     section "安裝和配置 ZSH"
+    
+    if [ "$INSTALL_MINIMAL" = true ]; then
+        info "極簡模式：跳過 ZSH，改為強化 Bash"
+        install_bash
+        return
+    fi
+
     local REQUIRED_TOOLS=""
     if ! command -v zsh >/dev/null 2>&1; then REQUIRED_TOOLS="$REQUIRED_TOOLS zsh"; fi
     if ! command -v git >/dev/null 2>&1; then REQUIRED_TOOLS="$REQUIRED_TOOLS git"; fi
@@ -154,6 +164,17 @@ install_zsh() {
         else
             zsh -c "zcompile ~/.zshrc" 2>/dev/null || true
         fi
+    fi
+}
+
+# ==================== 安裝 Bash 強化 ====================
+install_bash() {
+    section "安裝 Bash 強化配置"
+    local BASH_INSTALLER="$SCRIPT_DIR/bash/install.sh"
+    if [ -x "$BASH_INSTALLER" ]; then
+        "$BASH_INSTALLER"
+    else
+        error "找不到 Bash 安裝腳本"
     fi
 }
 
@@ -241,9 +262,10 @@ interactive_menu() {
     echo "  3) Neovim + LSP 完整環境"
     echo "  4) Tmux 配置"
     echo "  5) Git 配置"
-    echo "  6) Docker"
-    echo "  7) 【極簡開發環境】 (Tmux + Minimal Neovim + Git)"
-    echo "  8) 全部安裝"
+    echo "  6) Bash 強化 (極簡環境推薦)"
+    echo "  7) Docker"
+    echo "  8) 【極簡開發環境】 (Tmux + Minimal Neovim + Git + Enhanced Bash)"
+    echo "  9) 全部安裝"
     echo "  0) 退出"
     echo ""
     read -p "請選擇: " choices
@@ -254,9 +276,10 @@ interactive_menu() {
             3) INSTALL_NEOVIM=true ;;
             4) INSTALL_TMUX=true ;;
             5) INSTALL_GIT=true ;;
-            6) INSTALL_DOCKER=true ;;
-            7) INSTALL_MINIMAL=true; INSTALL_TMUX=true; INSTALL_NEOVIM=true; INSTALL_GIT=true; INSTALL_GENERAL=true ;;
-            8) INSTALL_ZSH=true; INSTALL_GENERAL=true; INSTALL_NEOVIM=true; INSTALL_TMUX=true; INSTALL_GIT=true; INSTALL_DOCKER=true ;;
+            6) INSTALL_BASH=true ;;
+            7) INSTALL_DOCKER=true ;;
+            8) INSTALL_MINIMAL=true; INSTALL_TMUX=true; INSTALL_NEOVIM=true; INSTALL_GIT=true; INSTALL_GENERAL=true; INSTALL_BASH=true ;;
+            9) INSTALL_ZSH=true; INSTALL_GENERAL=true; INSTALL_NEOVIM=true; INSTALL_TMUX=true; INSTALL_GIT=true; INSTALL_DOCKER=true ;;
             0) exit 0 ;;
         esac
     done
@@ -272,7 +295,7 @@ main() {
     
     if [ "$INSTALL_ZSH" = false ] && [ "$INSTALL_GENERAL" = false ] && [ "$INSTALL_NEOVIM" = false ] && \
        [ "$INSTALL_TMUX" = false ] && [ "$INSTALL_GIT" = false ] && [ "$INSTALL_DOCKER" = false ] && \
-       [ "$INSTALL_MINIMAL" = false ]; then
+       [ "$INSTALL_BASH" = false ] && [ "$INSTALL_MINIMAL" = false ]; then
         interactive_menu
     fi
     
@@ -280,6 +303,7 @@ main() {
     if [ "$INSTALL_GENERAL" = true ]; then install_general; fi
     if [ "$INSTALL_TMUX" = true ]; then install_tmux; fi
     if [ "$INSTALL_GIT" = true ]; then install_git; fi
+    if [ "$INSTALL_BASH" = true ]; then install_bash; fi
     if [ "$INSTALL_NEOVIM" = true ]; then install_neovim; fi
     if [ "$INSTALL_DOCKER" = true ]; then install_docker; fi
     
