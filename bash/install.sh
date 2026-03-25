@@ -21,13 +21,13 @@ sed -i '/Lazinit Bash/d' ~/.bashrc
 sed -i '/bashrc_extra/d' ~/.bashrc
 sed -i '/====================================/d' ~/.bashrc
 
-# 建立新檔案，先寫我們的配置，再串接原有的 .bashrc
+# 建立新檔案，先串接原有的 .bashrc，再把我們的配置放在最底部 (以覆蓋系統預設的 PS1 與 alias)
 TEMP_RC=$(mktemp)
-echo "# === Lazinit Bash 強化配置 (必須在最上方以繞過互動檢測) ===" > "$TEMP_RC"
+cat ~/.bashrc > "$TEMP_RC"
+echo "" >> "$TEMP_RC"
+echo "# === Lazinit Bash 強化配置 ===" >> "$TEMP_RC"
 echo "[ -f $SCRIPT_DIR/bashrc_extra ] && . $SCRIPT_DIR/bashrc_extra" >> "$TEMP_RC"
 echo "# ======================================================" >> "$TEMP_RC"
-echo "" >> "$TEMP_RC"
-cat ~/.bashrc >> "$TEMP_RC"
 
 # 覆蓋原檔
 mv "$TEMP_RC" ~/.bashrc
