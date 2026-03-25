@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bash 強化配置安裝腳本 (終極修復版 - 確保置頂)
+# Bash 強化配置安裝腳本 (精簡版 - 無 ble.sh)
 
 set -e
 
@@ -13,19 +13,10 @@ success() { echo -e "${GREEN}✓${NC} $1"; }
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# 1. 下載 ble.sh
-if [ ! -f "$HOME/.local/share/blesh/ble.sh" ]; then
-    info "正在下載 ble.sh..."
-    wget -qO- https://github.com/akinomyoga/ble.sh/releases/download/v0.4.0-devel3/ble-0.4.0-devel3.tar.xz | tar xJ -C /tmp
-    mkdir -p "$HOME/.local/share/blesh"
-    cp -rf /tmp/ble-0.4.0-devel3/* "$HOME/.local/share/blesh/"
-    rm -rf /tmp/ble-0.4.0-devel3
-fi
-
-# 2. 徹底重整 ~/.bashrc (保證置頂)
+# 徹底重整 ~/.bashrc (保證置頂)
 info "正在重整 ~/.bashrc 確保配置生效..."
 
-# 移除舊的注入，避免重複
+# 移除舊的注入，避免重複 (包含之前的 ble.sh 痕跡)
 sed -i '/Lazinit Bash/d' ~/.bashrc
 sed -i '/bashrc_extra/d' ~/.bashrc
 sed -i '/====================================/d' ~/.bashrc
