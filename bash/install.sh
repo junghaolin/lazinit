@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bash 強化配置安裝腳本 (修復版 - 確保 ble.sh 成功安裝)
+# Bash 強化配置安裝腳本 (終極修復版 - 確保置頂)
 
 set -e
 
@@ -13,31 +13,33 @@ success() { echo -e "${GREEN}✓${NC} $1"; }
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# 1. 安裝 ble.sh (改用更穩定的預編譯下載方式)
+# 1. 下載 ble.sh
 if [ ! -f "$HOME/.local/share/blesh/ble.sh" ]; then
-    info "正在安裝 ble.sh (穩定版)..."
-    # 下載官方預編譯穩定包
+    info "正在下載 ble.sh..."
     wget -qO- https://github.com/akinomyoga/ble.sh/releases/download/v0.4.0-devel3/ble-0.4.0-devel3.tar.xz | tar xJ -C /tmp
     mkdir -p "$HOME/.local/share/blesh"
     cp -rf /tmp/ble-0.4.0-devel3/* "$HOME/.local/share/blesh/"
     rm -rf /tmp/ble-0.4.0-devel3
-    success "ble.sh 安裝成功"
-else
-    info "ble.sh 已存在"
 fi
 
-# 2. 注入 ~/.bashrc (採用更激進的頂部注入)
-if ! grep -q "bashrc_extra" ~/.bashrc; then
-    info "正在將配置注入 ~/.bashrc 最頂部..."
-    TEMP_FILE=$(mktemp)
-    echo "# === Lazinit Bash 強化配置 (必須在最上方以啟動 ble.sh) ===" > "$TEMP_FILE"
-    echo "[ -f $SCRIPT_DIR/bashrc_extra ] && . $SCRIPT_DIR/bashrc_extra" >> "$TEMP_FILE"
-    echo "# ======================================================" >> "$TEMP_FILE"
-    echo "" >> "$TEMP_FILE"
-    cat ~/.bashrc >> "$TEMP_FILE"
-    mv "$TEMP_FILE" ~/.bashrc
-    success "注入完成"
-fi
+# 2. 徹底重整 ~/.bashrc (保證置頂)
+info "正在重整 ~/.bashrc 確保配置生效..."
 
-success "Bash 強化環境已就緒！"
-echo "請執行 'exec bash' 來立即體驗灰色補全。"
+# 移除舊的注入，避免重複
+sed -i '/Lazinit Bash/d' ~/.bashrc
+sed -i '/bashrc_extra/d' ~/.bashrc
+sed -i '/====================================/d' ~/.bashrc
+
+# 建立新檔案，先寫我們的配置，再串接原有的 .bashrc
+TEMP_RC=$(mktemp)
+echo "# === Lazinit Bash 強化配置 (必須在最上方以繞過互動檢測) ===" > "$TEMP_RC"
+echo "[ -f $SCRIPT_DIR/bashrc_extra ] && . $SCRIPT_DIR/bashrc_extra" >> "$TEMP_RC"
+echo "# ======================================================" >> "$TEMP_RC"
+echo "" >> "$TEMP_RC"
+cat ~/.bashrc >> "$TEMP_RC"
+
+# 覆蓋原檔
+mv "$TEMP_RC" ~/.bashrc
+
+success "Bash 強化環境安裝完成！"
+echo "請務必執行指令: exec bash"
