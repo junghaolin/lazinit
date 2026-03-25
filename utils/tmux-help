@@ -15,6 +15,7 @@ echo -e "你的前綴鍵 (Prefix) 已設定為: ${YELLOW}Ctrl + a${NC}\n"
 
 echo -e "${BLUE}▶ 基礎操作 (在終端機輸入)${NC}"
 echo -e "  ${GREEN}tmux${NC}                   啟動一個新的 Tmux 會話"
+echo -e "  ${GREEN}ssht user@ip${NC}           (Lazinit 專屬) 透過 SSH 連線並自動接回遠端 Tmux"
 echo -e "  ${GREEN}tmux ls${NC}                列出目前所有背景的 Tmux 會話"
 echo -e "  ${GREEN}tmux attach -t 0${NC}       重新連回編號 0 的會話"
 echo -e "  ${GREEN}tmux kill-session -a${NC}   砍掉所有會話 (危險!)\n"

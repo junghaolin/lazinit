@@ -46,8 +46,22 @@ alias glg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset 
 alias gco='git checkout'
 alias gcm='git commit -m'
 
+# Lazygit 視覺化工具
+if command -v lazygit >/dev/null 2>&1; then
+    alias lg='lazygit'
+fi
+
 # ==========================
-# 2. 智慧型 Prompt (雙行 + Git 支援)
+# 2. 智慧遠端連線 (SSH + Tmux)
+# ==========================
+# 用法: ssht user@hostname
+# 效果: 連線後自動建立或接回名為 'main' 的 Tmux 會話
+ssht() {
+    ssh -t "$@" "tmux new -A -s main"
+}
+
+# ==========================
+# 3. 智慧型 Prompt (雙行 + Git 支援)
 # ==========================
 parse_git_branch() {
     git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'

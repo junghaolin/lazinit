@@ -44,8 +44,9 @@ echo -e "  ${YELLOW}[ d${NC} / ${YELLOW}] d${NC}             跳到 上一個/�
 echo -e "  ${YELLOW}<Space> x x${NC}           開啟底部錯誤清單總覽 (Trouble)"
 echo -e "  ${YELLOW}<Space> u d${NC}           一鍵隱藏/顯示 所有錯誤提示文字 (UI Diagnostics Toggle)\n"
 
-echo -e "${BLUE}▶ 外掛管理 (Plugin Management)${NC}"
+echo -e "${BLUE}▶ 外掛管理與 Git (Plugins & Git)${NC}"
 echo -e "  ${YELLOW}<Space> l${NC}             開啟 Lazy 外掛管理面板 (可按 U 更新)"
-echo -e "  ${YELLOW}<Space> c m${NC}           開啟 Mason 面板 (管理 LSP、Linter 等)\n"
+echo -e "  ${YELLOW}<Space> c m${NC}           開啟 Mason 面板 (管理 LSP、Linter 等)"
+echo -e "  ${YELLOW}<Space> g g${NC}           開啟 Lazygit 視覺化 Git 介面 (亦可在終端機輸入 ${GREEN}lg${NC})\n"
 
 echo -e "${CYAN}======================================================${NC}"

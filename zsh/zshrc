@@ -136,6 +136,16 @@ alias dfimage="docker run -v /var/run/docker.sock:/var/run/docker.sock --rm alpi
 alias fzf='fzf --ansi'
 alias jo="ssh jo" ju="ssh ju" dut="ssh -t dut"
 
+# Lazygit 視覺化工具
+if command -v lazygit >/dev/null 2>&1; then
+    alias lg='lazygit'
+fi
+
+# 智慧遠端連線 (SSH + Tmux)
+ssht() {
+    ssh -t "$@" "tmux new -A -s main"
+}
+
 # Bindings
 bindkey '^K' history-search-backward
 bindkey '^J' history-search-forward
