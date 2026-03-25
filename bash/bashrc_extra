@@ -2,8 +2,16 @@
 # 適用於：不方便裝 Zsh 的極簡開發環境
 
 # ==========================
-# 1. 核心 Alias (支援 eza/exa 智慧偵測)
+# 1. 核心 Alias (支援 eza/exa 與 bat)
 # ==========================
+# 處理 bat / batcat (語法高亮預覽)
+if command -v batcat >/dev/null 2>&1; then
+    alias bat='batcat'
+    alias cat='batcat -p' # -p (plain) 只保留顏色，去掉行號與框線，方便滑鼠複製
+elif command -v bat >/dev/null 2>&1; then
+    alias cat='bat -p'
+fi
+
 if command -v eza >/dev/null 2>&1; then
     alias ls='eza -F'
     alias l='eza -lbF'
