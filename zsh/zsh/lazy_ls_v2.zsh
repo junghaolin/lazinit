@@ -7,6 +7,7 @@ _setup_ls_aliases() {
   alias ls='exa -F'
   alias l='exa -lbF'
   alias ll='exa -lbGF'
+  alias lll='exa -lbGF --color=always | less'
   alias llm='exa -lbGd --sort=modified'
   alias la='exa -lhHbmua --time-style=long-iso --color-scale'
   alias laa='exa -lbhHigUmuSa --time-style=long-iso --color-scale'
@@ -67,11 +68,12 @@ _lazy_ls_init_once() {
     alias ls='ls --color=auto'
     alias l='ls -CF'
     alias ll='ls -lh'
+    alias lll='ls -lh --color=always | less'
     alias la='ls -A'
   fi
 
   # 清理：移除所有函數覆蓋
-  unfunction ls l ll la llm laa lx lS lt lt3 lt4 lt5 lt6 lt7 lt8 lt9 lt0 2>/dev/null
+  unfunction ls l ll lll la llm laa lx lS lt lt3 lt4 lt5 lt6 lt7 lt8 lt9 lt0 2>/dev/null
   unfunction _lazy_ls_init_once _setup_ls_aliases 2>/dev/null
 }
 
@@ -86,6 +88,7 @@ _lazy_ls_trigger() {
 ls()  { _lazy_ls_trigger ls  "$@"; }
 l()   { _lazy_ls_trigger l   "$@"; }
 ll()  { _lazy_ls_trigger ll  "$@"; }
+lll() { _lazy_ls_trigger lll "$@"; }
 llm() { _lazy_ls_trigger llm "$@"; }
 la()  { _lazy_ls_trigger la  "$@"; }
 laa() { _lazy_ls_trigger laa "$@"; }
