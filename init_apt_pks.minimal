@@ -1,1 +1,1 @@
-git tmux ripgrep fzf fd-find curl wget make build-essential
+git tmux ripgrep fzf fd-find curl wget make build-essential eza exa

@@ -2,16 +2,33 @@
 # 適用於：不方便裝 Zsh 的極簡開發環境
 
 # ==========================
-# 1. 核心 Alias
+# 1. 核心 Alias (支援 eza/exa 智慧偵測)
 # ==========================
+if command -v eza >/dev/null 2>&1; then
+    alias ls='eza -F'
+    alias l='eza -lbF'
+    alias ll='eza -lbGF'
+    alias la='eza -laF'
+    alias tree='eza --tree'
+elif command -v exa >/dev/null 2>&1; then
+    alias ls='exa -F'
+    alias l='exa -lbF'
+    alias ll='exa -lbGF'
+    alias la='exa -laF'
+    alias tree='exa --tree'
+else
+    if [ -x /usr/bin/dircolors ]; then
+        alias ls='ls --color=auto'
+    fi
+    alias l='ls -CF'
+    alias la='ls -A'
+    alias ll='ls -alF'
+fi
+
 if [ -x /usr/bin/dircolors ]; then
-    alias ls='ls --color=auto'
     alias grep='grep --color=auto'
 fi
 
-alias l='ls -CF'
-alias la='ls -A'
-alias ll='ls -alF'
 alias ..='cd ..'
 alias ...='cd ../..'
 
