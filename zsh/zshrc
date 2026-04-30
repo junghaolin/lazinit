@@ -1,5 +1,12 @@
+# ============= Instant Prompt =============
+# Powerlevel10k Instant Prompt should be at the very top.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
 export TERM=xterm-256color
-fastfetch
 
 # ============= 工具函數 =============
 find_dir() {
@@ -11,11 +18,6 @@ find_dir() {
   done
   return 1
 }
-
-# ============= Instant Prompt =============
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
 
 # ============= Zinit 插件管理器 =============
 if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
@@ -100,6 +102,9 @@ path=(
 )
 [ -n "$GO_DIR" ] && export GO_PATH="$GO_DIR"
 
+# ============= Library Path 設定 =============
+export LD_LIBRARY_PATH="$HOME/.local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
 # ============= Conda 懶載入 (精確版) =============
 _load_conda() {
   if [ -n "$CONDA_BASE" ]; then
@@ -125,8 +130,6 @@ _load_nvm() {
 nvm node npm yarn npx pnpm corepack() { _load_nvm; "$0" "$@"; }
 
 # ============= 其他設定 =============
-export LC_ALL=en_US.UTF-8
-export LANG=en_US.UTF-8
 export FZF_DEFAULT_COMMAND='fd --type f --follow --exclude .git'
 export HSA_OVERRIDE_GFX_VERSION=11.0.0
 
@@ -162,4 +165,8 @@ fi
 [ -f "$HOME/.asdf/asdf.sh" ] && . "$HOME/.asdf/asdf.sh"
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 
+# ============= Final Execution =============
 export PATH
+fastfetch
+
+
