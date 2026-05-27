@@ -3,7 +3,7 @@ return {
 		"lukas-reineke/indent-blankline.nvim",
 		main = "ibl",
 		opts = {
-			enabled = true, -- 默認關閉
+			enabled = false, -- 默認關閉
 		},
 		config = function(_, opts)
 			require("ibl").setup(opts)

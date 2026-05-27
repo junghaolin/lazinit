@@ -169,4 +169,7 @@ fi
 export PATH
 fastfetch
 
+exd() {
+    ssh -tt dut "PATH=/usr/sbin:/usr/bin:/sbin:/bin:\$PATH; $(printf '%q ' "$@")"
 
+}
