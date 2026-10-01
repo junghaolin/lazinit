@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -e
+
+# srpc: SSH Remote Procedure Call
+# Executes commands on remote hosts defined in ~/.ssh/config
+
+usage() {
+    cat <<'USAGE'
+Usage:
+  srpc [ssh_options] <target> -- <command...>
+  srpc <target> -- <command...>
+
+Examples:
+  srpc dut -- ls -lah /tmp
+  srpc dut -- "uptime; free -m"
+  srpc dut -- mysql -u bpi -D OneWifiMesh -proot -e "SELECT * FROM STAList;"
+  srpc pwi210 -- sudo wpa_cli -i wlx289401d3fe81 status
+  srpc du1 -- iwconfig
+
+Description:
+  Executes commands remotely on an SSH target defined in ~/.ssh/config.
+  - Automatically handles proxy jumps, keys, and ports via SSH config.
+  - Automatically allocates pseudo-terminal (TTY) when run interactively.
+  - Preserves argument quoting, pipelines, and exit status.
+USAGE
+    exit 1
+}
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+ssh_opts=("-o" "StrictHostKeyChecking=accept-new")
+target=""
+cmd_args=()
+has_delim=0
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --)
+            has_delim=1
+            shift
+            cmd_args=("$@")
+            break
+            ;;
+        -h|--help)
+            usage
+            ;;
+        -*)
+            ssh_opts+=("$1")
+            shift
+            ;;
+        *)
+            if [ -z "$target" ]; then
+                target="$1"
+                shift
+            else
+                # Fallback if user omitted '--'
+                cmd_args=("$@")
+                break
+            fi
+            ;;
+    esac
+done
+
+if [ -z "$target" ]; then
+    echo "Error: Target host is required." >&2
+    usage
+fi
+
+if [ ${#cmd_args[@]} -eq 0 ]; then
+    echo "Error: No command specified to run on '$target'." >&2
+    usage
+fi
+
+# Auto-allocate pseudo-terminal only if stdin and stdout are interactive TTYs
+# and user hasn't explicitly supplied -T or -t
+has_tty_opt=0
+for opt in "${ssh_opts[@]}"; do
+    if [[ "$opt" =~ ^-[tT]$ ]]; then
+        has_tty_opt=1
+        break
+    fi
+done
+
+if [ $has_tty_opt -eq 0 ] && [ -t 0 ] && [ -t 1 ]; then
+    ssh_opts+=("-t")
+fi
+
+# Build remote command:
+# If a single composite string is provided (e.g. contains ';', '|', '&&'), pass directly.
+# Otherwise, quote arguments safely to preserve spaces and special chars.
+if [ ${#cmd_args[@]} -eq 1 ]; then
+    remote_cmd="${cmd_args[0]}"
+else
+    remote_cmd=$(printf '%q ' "${cmd_args[@]}")
+fi
+
+exec ssh "${ssh_opts[@]}" "$target" "$remote_cmd"
