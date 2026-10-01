@@ -2,9 +2,9 @@
 # 優化版：一次性初始化
 
 _setup_vi_aliases() {
-  alias vi='nvim'
+  alias vi='vim'
   alias nv='nvim'
-  alias vim='nvim'
+#  alias vim='nvim'
 }
 
 # 如果 nvim 已存在，直接設定

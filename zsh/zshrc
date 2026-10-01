@@ -1,3 +1,10 @@
+# ============= Pre-prompt Banner =============
+# 注意：fastfetch 必須置於 Instant Prompt preamble 之前。
+# P10k 在載入 instant-prompt 後會攔截 stdout/stderr；若在它之後或 zshrc 結尾輸出，
+# 會觸發 "[WARNING]: Console output during zsh initialization detected"。
+# 放在 preamble 之前輸出是 P10k 官方允許且唯一不觸發 Warning 的啟動 Banner 做法。
+fastfetch
+
 # ============= Instant Prompt =============
 # Powerlevel10k Instant Prompt should be at the very top.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
@@ -94,6 +101,7 @@ path=(
   $HOME/lazinit/utils
   $HOME/.local/bin
   $HOME/.opencode/bin
+  $HOME/.cargo/bin
   $HOME/flutter/bin
   $HOME/.lmstudio/bin
   $([ -n "$GO_DIR" ] && echo "$GO_DIR/bin")
@@ -167,9 +175,18 @@ fi
 
 # ============= Final Execution =============
 export PATH
-fastfetch
 
 exd() {
     ssh -tt dut "PATH=/usr/sbin:/usr/bin:/sbin:/bin:\$PATH; $(printf '%q ' "$@")"
 
+}
+
+
+if [ -f "$HOME/.env" ]; then
+    # 以純文字鍵值解析匯出 ~/.env；避免使用 `source` 執行非 Shell 語法內容或造成 set -a 全域洩漏
+    export $(grep -v '^#' "$HOME/.env" | xargs) 2>/dev/null || true
+fi
+
+gl() {
+  glow -p -w "$(tput cols </dev/tty)" "$@"
 }
