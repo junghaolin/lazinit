@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# ==============================================================================
+# RDK-B Hermes Sandbox Runner
+# 功能: 
+#   1. 掛載 Host 端 ~/.home 到 container 的 ~ (rdkuser)
+#   2. 掛載 Host 端目前的 PWD 到 container 內一致的路徑 (Path Parity)
+#   3. 在 container 內切換到該 PWD 並啟動 hermes agent
+# ==============================================================================
+
+REG_HOST="reg.lan.zoba.cc"
+IMAGE_NAME="$REG_HOST/library/rdkb-builder-22:latest"
+DEFAULT_NO_PROXY="localhost,127.0.0.1,*.wneweb.com.tw"
+
+# 取得腳本所在目錄 (用於尋找輔助腳本)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 核心系統檢查
+if [ -f "${SCRIPT_DIR}/ensure_bitbake_userns_sysctl.sh" ]; then
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/ensure_bitbake_userns_sysctl.sh"
+    ensure_bitbake_userns_sysctl
+fi
+
+# 1. 處理 Home 目錄: 掛載 Host 端 ~/.home 到 container 的 /home/rdkuser
+HOST_HOME_DIR=$(realpath -m "$HOME/.home")
+mkdir -p "$HOST_HOME_DIR"
+
+# 2. 處理目前目錄: 取得絕對路徑以確保 Path Parity
+# 如果在 /A/B/C 執行，CUR_DIR 就是 /A/B/C
+CUR_DIR=$(pwd)
+
+# 3. 處理 Proxy
+PROXY_ARGS=()
+if [ -n "$PROXY_HOST" ]; then
+    PROXY_ARGS+=(
+        -e "http_proxy=${PROXY_HOST}"
+        -e "https_proxy=${PROXY_HOST}"
+        -e "HTTP_PROXY=${PROXY_HOST}"
+        -e "HTTPS_PROXY=${PROXY_HOST}"
+    )
+fi
+
+# 輸出提示
+echo "Starting Hermes Sandbox..."
+echo "  Home     : $HOST_HOME_DIR -> /home/rdkuser"
+echo "  WorkDir  : $CUR_DIR (Mounted to same path inside)"
+echo "========================================================"
+
+# 執行 Docker
+# 關鍵參數:
+#   -v "${CUR_DIR}":"${CUR_DIR}" : 達成 Host 與 Container 路徑一致
+#   -w "${CUR_DIR}"             : 進入 Container 後自動切換到該目錄
+docker run -it --rm --userns=host \
+    --cap-add=SYS_ADMIN --security-opt seccomp=unconfined --security-opt apparmor=unconfined --privileged \
+    -v "${HOST_HOME_DIR}":"/home/rdkuser" \
+    -v "${CUR_DIR}":"${CUR_DIR}" \
+    -w "${CUR_DIR}" \
+    -e CONTAINER_HOME_DIR="/home/rdkuser" \
+    -e TERM="${TERM:-xterm-256color}" \
+    -e COLORTERM="${COLORTERM:-truecolor}" \
+    -e no_proxy="${DEFAULT_NO_PROXY}" \
+    -e NO_PROXY="${DEFAULT_NO_PROXY}" \
+    -e LOCAL_UID=$(id -u) \
+    -e LOCAL_GID=$(id -g) \
+    "${PROXY_ARGS[@]}" \
+    "$IMAGE_NAME" hermes "$@"

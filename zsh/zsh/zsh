@@ -1,1 +1,0 @@
-lazinit/zsh/zsh

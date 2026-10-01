@@ -1,218 +1,195 @@
+# ============= Pre-prompt Banner =============
+# 注意：fastfetch 必須置於 Instant Prompt preamble 之前。
+# P10k 在載入 instant-prompt 後會攔截 stdout/stderr；若在它之後或 zshrc 結尾輸出，
+# 會觸發 "[WARNING]: Console output during zsh initialization detected"。
+# 放在 preamble 之前輸出是 P10k 官方允許且唯一不觸發 Warning 的啟動 Banner 做法。
+fastfetch
 
-# 需要在某段「像 sh」時，用這個包起來（局部 emulate）
-shlike() { emulate -L sh; setopt SH_WORD_SPLIT; "$@"; }
-
-
-# —— 終端與提示 —— 
-export TERM=${TERM:-xterm-256color}
-typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
-
-# —— 有就跑 neofetch —— 
-if command -v neofetch >/dev/null 2>&1; then
-  neofetch
-fi
-
-find_dir (){
-  for var in "$@" ; do
-    if [ -e "$var" ];then
-      echo $var
-      exit
-    fi
-  done
-}
-
-# ============= Zinit + conda + p10k =============
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
+# ============= Instant Prompt =============
+# Powerlevel10k Instant Prompt should be at the very top.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# ------------- zinit core -------------
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export TERM=xterm-256color
+
+# ============= 工具函數 =============
+# 需要在某段「像 sh」時，用這個包起來（局部 emulate）
+shlike() { emulate -L sh; setopt SH_WORD_SPLIT; "$@"; }
+
+find_dir() {
+  for var in "$@"; do
+    if [ -e "$var" ]; then
+      echo "$var"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# ============= Zinit 插件管理器 =============
 if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
-    print -P "%F{33} %F{220}Installing %F{33}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager (%F{33}zdharma-continuum/zinit%F{220})…%f"
+    print -P "%F{33} %F{220}Installing Zinit…%f"
     command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"
-    command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" && \
-        print -P "%F{33} %F{34}Installation successful.%f%b" || \
-        print -P "%F{160} The clone has failed.%f%b"
+    command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git"
 fi
+
 source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
-# ------------- zinit core -------------
 
-# ------------- omz modules -------------
-zinit snippet OMZ::plugins/sudo/sudo.plugin.zsh # double esc to add/remove sudo
-zinit snippet OMZ::lib/completion.zsh #tab 輔選時列出清單用光棒選，而非看不到列表只輪流出現一個當前選項
-zinit snippet OMZ::lib/key-bindings.zsh #已打的部份指令不會在瀏覽歷史(上下鍵)時被清除
-# 未知/未使用
-# zinit snippet OMZ::lib/history.zsh
-# zinit snippet OMZ::lib/theme-and-appearance.zsh
-# zinit snippet OMZ::plugins/colored-man-pages/colored-man-pages.plugin.zsh
-# zinit snippet OMZ::plugins/extract
-# ------------- omz modules -------------
-
-
-# ------------- conda -------------
-CONDA_PATH=$(find_dir "$HOME/miniconda3" "$HOME/.local/opt/miniconda3" "$HOME/.miniconda3" "/opt/miniconda3")
-__conda_setup="$($CONDA_PATH/bin/conda 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "$CONDA_PATH/etc/profile.d/conda.sh" ]; then
-# . "/Users/zeph/miniconda3/etc/profile.d/conda.sh"  # commented out by conda initialize
-    else
-# export PATH="/Users/zeph/miniconda3/bin:$PATH"  # commented out by conda initialize
-    fi
-fi
-unset __conda_setup
-# ------------- conda -------------
-
-# ------------- Powerlevel10k -------------
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+# ============= 核心模組 (同步載入) =============
 zinit ice depth=1; zinit light romkatv/powerlevel10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-# ------------- Powerlevel10k -------------
 
-# ------------- zinit modules -------------
-# Load a few important annexes, without Turbo
-# (this is currently required for annexes)
-zinit light-mode for \
+zinit snippet OMZ::lib/key-bindings.zsh
+zinit snippet OMZ::lib/completion.zsh
+
+# ============= 附加功能 (Turbo Mode) =============
+zinit wait'0' lucid for \
+    OMZ::plugins/sudo/sudo.plugin.zsh \
     zdharma-continuum/zinit-annex-as-monitor \
     zdharma-continuum/zinit-annex-bin-gem-node \
-    zdharma-continuum/zinit-annex-patch-dl \
-    zdharma-continuum/zinit-annex-rust
-
-# 語法高亮 補全 自動建議
-zinit wait lucid for \
- atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
     zdharma-continuum/fast-syntax-highlighting \
- blockf \
-    zsh-users/zsh-completions \
- atload"!_zsh_autosuggest_start" \
-    zsh-users/zsh-autosuggestions
-# ------------- zinit modules -------------
+    blockf zsh-users/zsh-completions \
+    atload"!_zsh_autosuggest_start" zsh-users/zsh-autosuggestions
+
+# ============= Zsh 選項設定 =============
+setopt AUTO_CD                   # 直接輸入目錄名
+setopt AUTO_PUSHD                # cd 自動紀錄歷史
+setopt PUSHD_IGNORE_DUPS         # 不重複紀錄路徑
+setopt CORRECT                   # 命令糾錯
+setopt INTERACTIVE_COMMENTS      # 交互模式支持註釋
+unsetopt BEEP                    # 靜音
+
+# ============= History 設定 =============
 HISTFILE="$HOME/.zsh_history"
-HISTSIZE=500000
-SAVEHIST=500000
-setopt BANG_HIST                 # Treat the '!' character specially during expansion.
-setopt EXTENDED_HISTORY          # Write the history file in the ":start:elapsed;command" format.
-setopt INC_APPEND_HISTORY        # Write to the history file immediately, not when the shell exits.
-setopt SHARE_HISTORY             # Share history between all sessions.
-setopt HIST_EXPIRE_DUPS_FIRST    # Expire duplicate entries first when trimming history.
-setopt HIST_IGNORE_DUPS          # Don't record an entry that was just recorded again.
-setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
-setopt HIST_FIND_NO_DUPS         # Do not display a line previously found.
-setopt HIST_IGNORE_SPACE         # Don't record an entry starting with a space.
-setopt HIST_SAVE_NO_DUPS         # Don't write duplicate entries in the history file.
-setopt HIST_REDUCE_BLANKS        # Remove superfluous blanks before recording entry.
-setopt HIST_VERIFY               # Don't execute immediately upon history expansion.
-setopt HIST_BEEP                 # Beep when accessing nonexistent history.
-# ============= Zinit + conda + p10k =============
+HISTSIZE=100000
+SAVEHIST=100000
+setopt EXTENDED_HISTORY          # 紀錄時間
+setopt INC_APPEND_HISTORY        # 立即寫入
+setopt SHARE_HISTORY             # 跨 Session 共享
+setopt HIST_IGNORE_ALL_DUPS      # 忽略重複
+setopt HIST_REDUCE_BLANKS        # 移除空格
+setopt HIST_IGNORE_SPACE         # 忽略空格開頭的命令
+setopt HIST_SAVE_NO_DUPS         # 寫入檔案時不重複
 
-# lazy-load exa/ls aliases only for interactive shells
+# ============= 補全美化 (精煉版) =============
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' menu select
+zstyle ':completion:*:*:*:*:descriptions' format '%F{green}-- %d --%f'
+zstyle ':completion:*:messages' format ' %F{purple} -- %d --%f'
+zstyle ':completion:*:warnings' format ' %F{red}No matches for:%f %d'
+zstyle ':completion:*:*:*:*:corrections' format '%F{yellow}!- %d (errors: %e) -!%f'
+zstyle ':completion:*:*:-command-:*:' group-name ''
+
+# ============= Lazy Loading Scripts =============
 if [[ -o interactive ]]; then
-  source ~/.zsh/lazy_ls.zsh
-  source ~/.zsh/lazy_vi.zsh
-  source ~/.zsh/lazy_grc.zsh
-  source ~/.zsh/lazy_grep.zsh
-  source ~/.zsh/lazy_cat.zsh
+  # 載入 v2 系列懶載入腳本
+  for f in ls vi grc grep cat; do
+    [ -f ~/.zsh/lazy_${f}_v2.zsh ] && source ~/.zsh/lazy_${f}_v2.zsh
+  done
 fi
 
+# ============= PATH 極致整合 =============
+typeset -U path
+# 尋找工具路徑
+GO_DIR=$(find_dir "$HOME/go" "$HOME/.local/opt/go" "/usr/local/go")
+CONDA_BASE=$(find_dir "/opt/miniconda3" "$HOME/miniconda3" "$HOME/.miniconda3")
 
-#alias vi='nvim'
-#alias nv='nvim'
+path=(
+  $HOME/lazinit/utils
+  $HOME/.local/bin
+  $HOME/.opencode/bin
+  $HOME/.cargo/bin
+  $HOME/flutter/bin
+  $HOME/.lmstudio/bin
+  $([ -n "$GO_DIR" ] && echo "$GO_DIR/bin")
+  $([ -d "/usr/local/go/bin" ] && echo "/usr/local/go/bin")
+  $path
+)
+[ -n "$GO_DIR" ] && export GO_PATH="$GO_DIR"
 
+# ============= Library Path 設定 =============
+export LD_LIBRARY_PATH="$HOME/.local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
-#alias grc='grc -es --colour=auto'
-##alias netstat='sudo grc netstat'
-#alias lsof='sudo grc netstat'
-#alias ping='grc ping'
-#alias traceroute='grc traceroute'
-#alias ifconfig='grc ifconfig'
-#alias mount='grc mount'
-#alias ps='grc ps'
-#alias df='grc df'
-#alias du='grc du'
-#alias dig='grc dig'
-#alias diff='grc diff'
-#alias wdiff='grc wdiff'
-#alias route='grc route'
-#3333alias mtr='grc mtr'
-#alias git='grc git'
-#alias docker='grc docker'
-
-#alias grep='rg --color=always --no-ignore-vcs --mmap --colors "match:fg:red"'
-#alias cat='ccat --color=always --bg=dark -G Plaintext="white"'
-# ================= Alias =================
-
-
-
-# ================= Paths =================
-PATH=$PATH:$HOME/lazinit/utils
-PATH=$PATH:$HOME/.local/bin
-GO_PATH=$(find_dir "$HOME/go" "$HOME/.local/opt/go" "$HOME/.go" "/opt/go")
-if [ -e "$CONDA_PATH" ];then PATH=$PATH:$GO_PATH/bin ; fi
-#PATH=$PATH:$HOME/go/bin
-PATH=$PATH:$HOME/flutter/bin
-#PATH=$PATH:$HOME/miniconda3/bin
-PATH=$PATH:/opt/idea-IU-231.8770.65/bin
-PATH=$PATH:/opt/lua-language-server
-#PATH=$PATH:home/linuxbrew/.linuxbrew/bin
-#PATH=$PATH:$(go env GOPATH)/bin
-# ================= Paths =================
-
-alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive"
-alias dfimage="docker run -v /var/run/docker.sock:/var/run/docker.sock --rm alpine/dfimage"
-
-alias qdbus=”qdbus-qt5”
-LC_CTYPE=en_US.UTF-8
-LC_ALL=en_US.UTF-8
-export GO_PATH=~/go
-export PATH=$PATH:/$GO_PATH/bin
-export PATH=$PATH:/usr/local/go/bin
-export PATH="$PATH:$HOME/.docker/cli-plugins/"
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/opt/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/opt/miniconda3/etc/profile.d/conda.sh"
+# ============= Conda 懶載入 (精確版) =============
+_load_conda() {
+  if [ -n "$CONDA_BASE" ]; then
+    if [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
+      . "$CONDA_BASE/etc/profile.d/conda.sh"
     else
-        export PATH="/opt/miniconda3/bin:$PATH"
+      path=($CONDA_BASE/bin $path)
     fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
+  fi
+  unfunction conda python python3 pip pip3 2>/dev/null
+}
+conda python python3 pip pip3() { _load_conda; "$0" "$@"; }
 
-export FZF_DEFAULT_COMMAND='fd –type f –follow –exclude .git'
+# ============= NVM 懶載入 (精確版) =============
+_load_nvm() {
+  export NVM_DIR=$(find_dir "/usr/local/opt/nvm" "$HOME/.nvm")
+  if [ -n "$NVM_DIR" ]; then
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+  fi
+  unfunction nvm node npm yarn npx pnpm corepack 2>/dev/null
+}
+nvm node npm yarn npx pnpm corepack() { _load_nvm; "$0" "$@"; }
 
+# ============= 其他設定 =============
+export FZF_DEFAULT_COMMAND='fd --type f --follow --exclude .git'
+export HSA_OVERRIDE_GFX_VERSION=11.0.0
 
-export NVM_DIR=$(find_dir "/usr/local/opt/nvm" "$HOME/.nvm")
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# 解決 less 吞掉顏色的問題，並開啟詳細狀態列與忽略大小寫搜尋
+export LESS="-R -i -M -x4"
 
-if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
-    source /etc/profile.d/vte-2.91.sh
-fi
-
-if [ "$TERM" = "xterm-kitty" ]; then
-    alias ssh="kitty +kitten ssh"
-fi
-
-
-alias luamake="/home/zeph/lazinit/neovim/lua-language-server/3rd/luamake/luamake"
+# Aliases
+alias dive="docker run -ti --rm -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive"
+alias dfimage="docker run -v /var/run/docker.sock:/var/run/docker.sock --rm alpine/dfimage"
 alias fzf='fzf --ansi'
+alias jo="ssh jo" ju="ssh ju" dut="ssh -t dut"
 
-# 綁定 Ctrl+j 到上一個歷史指令
+# Lazygit 視覺化工具
+if command -v lazygit >/dev/null 2>&1; then
+    alias lg='lazygit'
+fi
+
+# 智慧遠端連線 (SSH + Tmux)
+ssht() {
+    ssh -t "$@" "tmux new -A -s main"
+}
+
+# Bindings
 bindkey '^K' history-search-backward
 bindkey '^J' history-search-forward
 
+# Tilix/VTE
+if [ -n "$TILIX_ID" ] || [ -n "$VTE_VERSION" ]; then
+  [ -f /etc/profile.d/vte-2.91.sh ] && source /etc/profile.d/vte-2.91.sh
+fi
 
-# Added by LM Studio CLI (lms)
-export PATH="$PATH:/home/zeph/.lmstudio/bin"
-export HSA_OVERRIDE_GFX_VERSION=11.0.0
+# asdf & local config
+[ -f "$HOME/.asdf/asdf.sh" ] && . "$HOME/.asdf/asdf.sh"
+[ -f ~/.zshrc.local ] && source ~/.zshrc.local
+
+# ============= Final Execution =============
+export PATH
+
+exd() {
+    ssh -tt dut "PATH=/usr/sbin:/usr/bin:/sbin:/bin:\$PATH; $(printf '%q ' "$@")"
+
+}
+
+
+if [ -f "$HOME/.env" ]; then
+    # 以純文字鍵值解析匯出 ~/.env；避免使用 `source` 執行非 Shell 語法內容或造成 set -a 全域洩漏
+    export $(grep -v '^#' "$HOME/.env" | xargs) 2>/dev/null || true
+fi
+
+gl() {
+  glow -p -w "$(tput cols </dev/tty)" "$@"
+}

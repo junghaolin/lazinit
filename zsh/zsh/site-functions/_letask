@@ -1,0 +1,134 @@
+#compdef letask
+
+# Sub-function to get raw problem data from the letask tool
+_get_problem_raw_data() {
+    letask list | sed 's/\x1b\[[0-9;]*m//g' | awk '
+        NR > 2 && $3 ~ /^[0-9]{4}$/ {
+            title = "";
+            for (i = 4; i <= NF; i++) { title = title " " $i; }
+            sub(/^ /, "", title);
+            print $3 "|" $2 "|" title;
+        }
+    '
+}
+
+# Helper function to escape special characters for Zsh completion descriptions
+_zsh_escape() {
+    local input_string=$1
+    # Perform substitutions in series for all known special characters
+    input_string=${input_string//:/\\:}
+    input_string=${input_string//\[/\\[\]}
+    input_string=${input_string//\]/\\\\]}
+    input_string=${input_string//"/\\"}
+    input_string=${input_string//'/'}
+    echo "$input_string"
+}
+
+# Sub-function to handle the entire problem completion logic.
+_letask_complete_problems() {
+    # Define raw ANSI color codes using Zsh's $'...' syntax
+    local color_green=$'\e[32m'
+    local color_yellow=$'\e[33m'
+    local color_red=$'\e[31m'
+    local color_reset=$'\e[39m' # Use foreground-only reset
+
+    local -a raw_lines
+    raw_lines=("${(@f)$(_get_problem_raw_data)}")
+
+    local -a problem_descriptions
+    for line in "${raw_lines[@]}"; do
+        local -a parts
+        parts=("${(@s/|/)line}")
+        local num=${parts[1]}
+        local diff=${parts[2]}
+        local title=${parts[3]}
+        # Select color based on difficulty
+        local color=$color_reset
+        case ${(L)diff} in
+            easy)
+                color=$color_green
+                ;;
+            medium)
+                color=$color_yellow
+                ;;
+            hard)
+                color=$color_red
+                ;;
+        esac
+
+        # Outsource escaping to the dedicated helper function
+        local escaped_title=$(_zsh_escape "$title")
+
+        # Construct the description string with colors
+        problem_descriptions+=("$num:${color}[${(U)diff:0:1}]${color_reset} ${(U)diff} $escaped_title")
+    done
+
+    if (( ${#problem_descriptions[@]} > 0 )); then
+        _describe 'problem' problem_descriptions
+    fi
+}
+
+_letask() {
+    local cur_word prev_word
+    cur_word=${words[CURRENT]}
+    prev_word=${words[CURRENT-1]}
+
+    local -a subcommands
+    subcommands=(
+        "new:Create a new problem"
+        "claw:Claw a problem from leetcode"
+        "run:Run a problem's solution"
+        "submit:Submit a problem's solution"
+        "code:Open a problem's code in the editor"
+        "list:List problems"
+        "url:Show reference URL for a problem"
+        "help:Show usage information"
+    )
+    
+    if (( CURRENT == 2 )); then
+        _describe 'subcommand' subcommands
+        return
+    fi
+
+    # Argument completion based on the subcommand
+    case ${words[2]} in
+        run|submit|code|url|claw)
+            if (( CURRENT == 3 )); then
+                # Call the dedicated sub-function to handle problem completion
+                _letask_complete_problems
+            elif (( CURRENT == 4 )); then
+                if [[ "${words[2]}" =~ ^(run|submit|code)$ ]]; then
+                  local -a langs
+                  langs=(
+                    "c:ANSI C language"
+                    "go:Go language"
+                  )
+                  _describe 'language' langs
+                  #_values 'language' 'go' 'c'
+                fi
+            elif (( CURRENT == 5 )); then
+                if [[ "${words[2]}" =~ ^(run|submit)$ && "${words[4]}" == "c" ]]; then
+                  local -a copts
+                  copts=(
+                    "asan:Address Santanizer"
+                    "ubsan:Undefined Behavior Sanitizer"
+                    "valgrind:Valgrind memory analysis"
+                    "debug:Show debug message"
+                  )
+                  _describe 'c option' copts
+                  #  _values 'debug option' 'asan' 'ubsan' 'valgrind' 'debug'
+                fi
+            fi
+            ;;
+        list)
+            if (( CURRENT >= 3 )); then
+                _values 'filter' 'new' 'old' 'easy' 'medium' 'hard'
+            fi
+            ;;
+        *)
+            _files
+            ;;
+    esac
+}
+
+_letask "$@"

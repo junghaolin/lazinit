@@ -1,0 +1,108 @@
+# Lazinit Bash 強化配置
+# 適用於：不方便裝 Zsh 的極簡開發環境
+
+# ==========================
+# 1. 核心 Alias (支援 eza/exa 與 bat)
+# ==========================
+# 處理 bat / batcat (語法高亮預覽)
+if command -v batcat >/dev/null 2>&1; then
+    alias bat='batcat'
+    alias cat='batcat -p' # -p (plain) 只保留顏色，去掉行號與框線，方便滑鼠複製
+elif command -v bat >/dev/null 2>&1; then
+    alias cat='bat -p'
+fi
+
+if command -v eza >/dev/null 2>&1; then
+    alias ls='eza -F'
+    alias l='eza -lbF'
+    alias ll='eza -lbGF'
+    alias la='eza -laF'
+    alias tree='eza --tree'
+    alias lll='eza -lbGF --color=always | less' # 專門用來分頁看長目錄，保證不掉色
+elif command -v exa >/dev/null 2>&1; then
+    alias ls='exa -F'
+    alias l='exa -lbF'
+    alias ll='exa -lbGF'
+    alias la='exa -laF'
+    alias tree='exa --tree'
+    alias lll='exa -lbGF --color=always | less' # 專門用來分頁看長目錄，保證不掉色
+else
+    if [ -x /usr/bin/dircolors ]; then
+        alias ls='ls --color=auto'
+    fi
+    alias l='ls -CF'
+    alias la='ls -A'
+    alias ll='ls -alF'
+    alias lll='ls -alF --color=always | less'
+fi
+
+if [ -x /usr/bin/dircolors ]; then
+    alias grep='grep --color=auto'
+fi
+
+alias ..='cd ..'
+alias ...='cd ../..'
+
+# Git 常用縮寫
+alias gst='git status -sb'
+alias glg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+alias gco='git checkout'
+alias gcm='git commit -m'
+
+# Lazygit 視覺化工具
+if command -v lazygit >/dev/null 2>&1; then
+    alias lg='lazygit'
+fi
+
+# ==========================
+# 2. 智慧遠端連線 (SSH + Tmux)
+# ==========================
+# 用法: ssht user@hostname
+# 效果: 連線後自動建立或接回名為 'main' 的 Tmux 會話
+ssht() {
+    ssh -t "$@" "tmux new -A -s main"
+}
+
+# ==========================
+# 3. 智慧型 Prompt (雙行 + Git 支援)
+# ==========================
+parse_git_branch() {
+    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+
+COLOR_USER="\[\033[01;32m\]"
+COLOR_HOST="\[\033[01;32m\]"
+COLOR_PATH="\[\033[01;34m\]"
+COLOR_GIT="\[\033[01;33m\]"
+COLOR_RESET="\[\033[00m\]"
+
+export PS1="${COLOR_USER}\u${COLOR_RESET}@${COLOR_HOST}\h${COLOR_RESET}:${COLOR_PATH}\w${COLOR_GIT}\$(parse_git_branch)${COLOR_RESET}\n\$ "
+
+# ==========================
+# 3. 歷史搜尋強化 (向上鍵自動補齊)
+# ==========================
+# 綁定向上/下鍵：輸入部分指令後按向上鍵，只顯示匹配該前綴的歷史
+if [[ $- == *i* ]]; then
+    bind '"\e[A": history-search-backward'
+    bind '"\e[B": history-search-forward'
+fi
+
+# ==========================
+# 4. FZF 整合
+# ==========================
+if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+  source /usr/share/doc/fzf/examples/key-bindings.bash
+elif [ -f ~/.fzf.bash ]; then
+  source ~/.fzf.bash
+fi
+
+# ==========================
+# 5. 環境變數優化
+# ==========================
+# 解決 less 吞掉顏色的問題，並開啟詳細狀態列與忽略大小寫搜尋
+export LESS="-R -i -M -x4"
+
+# ==========================
+# 6. 路徑優化
+# ==========================
+export PATH="$HOME/.local/bin:$HOME/lazinit/utils:$PATH"

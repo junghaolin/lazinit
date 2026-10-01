@@ -1,69 +1,123 @@
 #!/bin/bash
+# Neovim + LSP 環境安裝腳本（完全修復版）
+# 支援 ARM64 (Orange Pi), 穩定版本偵測, 極簡模式
 
-sudo apt update
-sudo apt install git
+set -e
 
-#install lazy.vim
-git clone --filter=blob:none https://github.com/folke/lazy.nvim.git --branch=stable ~/.local/share/nvim/lazy/lazy.nvim
+# 顏色定義
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
 
-#install nvm
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+info() { echo -e "${BLUE}ℹ${NC} $1"; }
+success() { echo -e "${GREEN}✓${NC} $1"; }
+warning() { echo -e "${YELLOW}⚠${NC} $1"; }
+error() { echo -e "${RED}✗${NC} $1"; }
+section() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}\n"; }
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+# 參數解析
+REINSTALL_DEEP=false
+INSTALL_MINIMAL=false
+for arg in "$@"; do
+    case $arg in
+        --reinstall) REINSTALL_DEEP=true ;;
+        --minimal) INSTALL_MINIMAL=true ;;
+    esac
+done
 
-#install node/npm
-nvm install --lts
+# 環境檢測
+if [[ "$OSTYPE" == "darwin"* ]]; then OS="macos"; else OS="linux"; fi
+SUDO="sudo"; [ "$(id -u)" == "0" ] && SUDO=""
 
-#installations for LSP:
+# 深度清理
+if [ "$REINSTALL_DEEP" = true ]; then
+    section "執行深度清理"
+    rm -rf "$HOME/.local/share/nvim" "$HOME/.cache/nvim" "$HOME/.local/state/nvim"
+    success "清理完成"
+fi
 
-#Markdown:
-curl -L -o marksman.tar.gz https://github.com/artempyanykh/marksman/releases/latest/download/marksman-linux.tar.gz
-tar -xvzf marksman.tar.gz
-sudo mv marksman /usr/local/bin/
+# Neovim 安裝與版本校驗
+section "檢查 Neovim 版本"
+install_neovim() {
+    local ARCH=$(uname -m)
+    local NEEDS_UPDATE=false
+    
+    if command -v nvim >/dev/null 2>&1; then
+        # 強健的版本提取邏輯：只拿數字 (例如 NVIM v0.7.2 -> 0.7.2)
+        local ver_str=$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+        local major=$(echo $ver_str | cut -d. -f1)
+        local minor=$(echo $ver_str | cut -d. -f2)
+        
+        info "檢測到現有版本: $ver_str ($ARCH)"
+        
+        if [ "$major" -eq 0 ] && [ "$minor" -lt 10 ]; then
+            warning "版本太舊 ($ver_str)，必須更新到 0.10.0+ 才能執行現代配置。"
+            NEEDS_UPDATE=true
+        elif [ "$INSTALL_MINIMAL" = true ]; then
+            info "極簡模式：版本足夠，跳過安裝"
+            return
+        else
+            NEEDS_UPDATE=false
+        fi
+    else
+        info "未檢測到 Neovim，準備開始安裝..."
+        NEEDS_UPDATE=true
+    fi
 
-#Lua
-sudo apt install ninja-build git build-essential
-cd /tmp
-git clone https://github.com/LuaLS/lua-language-server.git
-cd lua-language-server
-git submodule update --init --recursive
-cd 3rd/luamake
-./compile/install.sh
-cd ../..
-./3rd/luamake/luamake rebuild
-sudo mv build/bin/lua-language-server /usr/local/bin/
-sudo mv build/bin/bootstrap /usr/local/bin/
-sudo mv build/bin/main.lua /usr/local/bin/
+    if [ "$NEEDS_UPDATE" = true ]; then
+        if [ "$OS" = "macos" ]; then
+            brew install neovim
+        else
+            # 針對 Linux (x86_64 或 ARM64)
+            if [ "$ARCH" = "x86_64" ]; then
+                info "下載 Neovim x86_64 AppImage..."
+                wget -q --show-progress -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
+                chmod +x /tmp/nvim.appimage
+                $SUDO mv /tmp/nvim.appimage /usr/local/bin/nvim
+            elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+                info "檢測到 ARM64 架構，下載預編譯包..."
+                wget -q --show-progress -O /tmp/nvim-linux-arm64.tar.gz https://github.com/neovim/neovim/releases/latest/download/nvim-linux-arm64.tar.gz
+                cd /tmp && tar -xzf nvim-linux-arm64.tar.gz
+                $SUDO cp -rf nvim-linux-arm64/bin/* /usr/local/bin/
+                $SUDO cp -rf nvim-linux-arm64/lib/* /usr/local/lib/
+                $SUDO cp -rf nvim-linux-arm64/share/* /usr/local/share/
+                rm -rf nvim-linux-arm64 nvim-linux-arm64.tar.gz
+                cd - > /dev/null
+            fi
+        fi
+        success "Neovim 更新完成！"
+    fi
+}
+install_neovim
 
-sudo mkdir -p /opt
-sudo mv build/bin/main.lua /opt/
+# 基礎工具安裝
+section "安裝基礎工具"
+$SUDO apt update
+if [ "$INSTALL_MINIMAL" = true ]; then
+    $SUDO apt install -y git curl wget fd-find ripgrep
+else
+    $SUDO apt install -y git curl wget fd-find python3-pynvim ripgrep
+fi
+[ -x "$(command -v fdfind)" ] && mkdir -p "$HOME/.local/bin" && ln -sf "$(which fdfind)" "$HOME/.local/bin/fd"
 
-#YAML
-npm install -g yaml-language-server
+# 配置符號連結
+section "配置 Neovim"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+NVIM_CONFIG="$SCRIPT_DIR/nvim"
+mkdir -p "$HOME/.config"
 
-#golang
-sudo apt install golang -y
-go install golang.org/x/tools/gopls@latest
+if [ "$INSTALL_MINIMAL" = true ]; then
+    info "套用極簡配置 (Minimal Mode)..."
+    cp "$NVIM_CONFIG/init.minimal.lua" "$NVIM_CONFIG/init.lua"
+fi
+ln -sf "$NVIM_CONFIG" "$HOME/.config/nvim"
 
-#C/C++
-sudo apt install clangd
+# 最後修復
+git config --global core.autocrlf false
+git config --global core.fileMode false
+rm -f "$HOME/.config/nvim/lazy-lock.json"
 
-#Bash
-npm install -g bash-language-server
-
-#Python
-npm install -g pyright
-
-#JSON
-npm install -g vscode-langservers-extracted
-
-#Dockerfile
-npm install -g dockerfile-language-server-nodejs
-
-sudo apt-get install luajit
-sudo apt-get install libmagickwand-dev
-sudo apt-get install libgraphicsmagick1-dev
-sudo apt-get install luarocks
-sudo luarocks install magick
+success "🎉 Neovim 安裝與配置完成！"
